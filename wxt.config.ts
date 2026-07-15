@@ -8,7 +8,11 @@ export default defineConfig({
     version: '0.1.0',
     description: 'Track LeetCode problem difficulty with ratings',
     permissions: ['storage', 'activeTab'],
-    host_permissions: ['*://leetcode.com/*'],
+    host_permissions: [
+      '*://leetcode.com/*',
+      'https://*.supabase.co/*',
+      'http://localhost:8080/*',
+    ],
     browser_specific_settings: {
       gecko: {
         id: 'lc-fsrs@example.com',

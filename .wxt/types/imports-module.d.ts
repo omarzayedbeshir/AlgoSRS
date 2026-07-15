@@ -17,7 +17,9 @@ declare module '#imports' {
   export { injectScript, ScriptPublicPath, InjectScriptOptions } from 'wxt/utils/inject-script';
   export { InvalidMatchPattern, MatchPattern } from 'wxt/utils/match-patterns';
   export { fakeBrowser } from 'wxt/testing';
+  export { default as AuthPanel } from '../src/components/AuthPanel';
   export { default as SavePanel } from '../src/components/SavePanel';
   export { default as SavedList } from '../src/components/SavedList';
+  export { default as SyncStatus } from '../src/components/SyncStatus';
   export { default as WidgetApp } from '../src/components/WidgetApp';
 }

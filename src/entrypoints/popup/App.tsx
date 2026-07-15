@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { ProblemData } from '../../types';
 import SavePanel from '../../components/SavePanel';
 import SavedList from '../../components/SavedList';
+import AuthPanel from '../../components/AuthPanel';
+import SyncStatus from '../../components/SyncStatus';
+import { getAuthState } from '../../lib/supabase';
+import { syncAll } from '../../lib/sync';
 
 type View = 'loading' | 'save' | 'browse';
 
@@ -9,6 +13,11 @@ export default function App() {
   const [view, setView] = useState<View>('loading');
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [onLeetCode, setOnLeetCode] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+  }, []);
 
   useEffect(() => {
     detectProblem();
@@ -44,19 +53,43 @@ export default function App() {
     setView('browse');
   }
 
+  async function handleSync() {
+    await syncAll();
+    await getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+  }
+
+  function handleAuthChange() {
+    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+  }
+
   if (view === 'loading') {
-    return <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>;
+    return (
+      <div>
+        <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
+        <AuthPanel onAuthChange={handleAuthChange} />
+      </div>
+    );
   }
 
   if (view === 'save' && problem) {
     return (
-      <SavePanel
-        problem={problem}
-        onSaved={() => setView('browse')}
-        onBrowse={() => setView('browse')}
-      />
+      <div>
+        <SavePanel
+          problem={problem}
+          onSaved={() => setView('browse')}
+          onBrowse={() => setView('browse')}
+        />
+        <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+        <AuthPanel onAuthChange={handleAuthChange} />
+      </div>
     );
   }
 
-  return <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} />;
+  return (
+    <div>
+      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} />
+      <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+      <AuthPanel onAuthChange={handleAuthChange} />
+    </div>
+  );
 }

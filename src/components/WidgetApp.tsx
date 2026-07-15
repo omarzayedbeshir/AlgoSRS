@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { ProblemData, Difficulty } from '../types';
 import SavePanel from './SavePanel';
 import SavedList from './SavedList';
+import AuthPanel from './AuthPanel';
+import SyncStatus from './SyncStatus';
+import { getAuthState } from '../lib/supabase';
+import { syncAll } from '../lib/sync';
 
 type View = 'loading' | 'save' | 'browse' | 'minimized';
 
@@ -10,8 +14,10 @@ const T = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
 export default function WidgetApp() {
   const [view, setView] = useState<View>('loading');
   const [problem, setProblem] = useState<ProblemData | null>(null);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
     waitForProblemData().then(data => {
       if (data) { setProblem(data); setView('save'); return; }
       setView('browse');
@@ -28,6 +34,15 @@ export default function WidgetApp() {
     if (problem) setView('save');
     else setView('browse');
   };
+
+  async function handleSync() {
+    await syncAll();
+    await getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+  }
+
+  function handleAuthChange() {
+    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+  }
 
   return (
     <div style={{ margin: '16px', position: 'relative' }}>
@@ -59,6 +74,8 @@ export default function WidgetApp() {
         ) : (
           <SavedList onSaveNew={detectProblem} showNewButton />
         )}
+        <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+        <AuthPanel onAuthChange={handleAuthChange} />
       </div>
 
       <div
