@@ -18,6 +18,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("GET /", handler.AuthCallback)
 	mux.HandleFunc("GET /api/health", handler.Health)
 	mux.HandleFunc("GET /auth/callback", handler.AuthCallback)
 
