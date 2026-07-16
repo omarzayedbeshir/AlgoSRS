@@ -6,3 +6,4 @@ output/
 backend/lc-fsrs-backend
 *.local
 .env
+
