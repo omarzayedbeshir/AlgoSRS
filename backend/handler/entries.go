@@ -10,6 +10,27 @@ import (
 	"lc-fsrs-backend/models"
 )
 
+const SuccessContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Verified</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f6f8">
+<div style="text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.1)">
+  <div style="font-size:48px;margin-bottom:16px">✅</div>
+  <h1 style="font-size:20px;color:#1a1a1a;margin:0 0 8px">Email verified!</h1>
+  <p style="font-size:14px;color:#666;margin:0">You can close this tab and go back to the extension.</p>
+</div>
+</body>
+</html>`
+
+func AuthCallback(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(SuccessContent))
+}
+
 func Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }

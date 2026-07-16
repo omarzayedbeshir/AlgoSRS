@@ -38,7 +38,9 @@ export default function SavedList({ onSaveNew, showNewButton, isAuthenticated, s
   async function handleDelete(id: string) {
     await remove(id);
     if (isAuthenticated) {
-      api.deleteEntry(id).catch(() => {});
+      try {
+        await api.deleteEntry(id);
+      } catch {}
     }
     const all = await getAll();
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

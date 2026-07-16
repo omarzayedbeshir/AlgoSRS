@@ -19,6 +19,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/health", handler.Health)
+	mux.HandleFunc("GET /auth/callback", handler.AuthCallback)
 
 	mux.Handle("GET /api/entries", middleware.Auth(http.HandlerFunc(handler.ListEntries)))
 	mux.Handle("POST /api/entries", middleware.Auth(http.HandlerFunc(handler.UpsertEntry)))
