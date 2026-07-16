@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
+import { api } from '../lib/api-client';
 import { autoSync } from '../lib/sync';
 
 const RATING_EMOJI: Record<Rating, string> = {
@@ -36,8 +37,12 @@ export default function SavedList({ onSaveNew, showNewButton, isAuthenticated, s
 
   async function handleDelete(id: string) {
     await remove(id);
-    autoSync();
-    loadEntries();
+    if (isAuthenticated) {
+      api.deleteEntry(id).catch(() => {});
+    }
+    const all = await getAll();
+    all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setEntries(all);
   }
 
   function formatDate(dateStr: string): string {
