@@ -10,6 +10,13 @@ import (
 	"lc-fsrs-backend/models"
 )
 
+const cols = "id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at"
+
+func scanEntry(e *models.Entry, rows interface{ Scan(...interface{}) error }) error {
+	return rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date,
+		&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
+}
+
 const SuccessContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -39,8 +46,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 
 	rows, err := db.Pool.Query(r.Context(),
-		`SELECT id, user_id, title, url, difficulty, rating, date, updated_at
-		 FROM leetcode_entries WHERE user_id = $1
+		`SELECT `+cols+` FROM leetcode_entries WHERE user_id = $1
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
 		log.Printf("list entries query: %v", err)
@@ -52,7 +58,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	entries := []models.Entry{}
 	for rows.Next() {
 		var e models.Entry
-		if err := rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date, &e.UpdatedAt); err != nil {
+		if err := scanEntry(&e, rows); err != nil {
 			log.Printf("list entries scan: %v", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
@@ -73,17 +79,26 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := db.Pool.QueryRow(r.Context(),
-		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
 		 ON CONFLICT (user_id, url) DO UPDATE SET
 		     title = EXCLUDED.title,
 		     difficulty = EXCLUDED.difficulty,
 		     rating = EXCLUDED.rating,
 		     date = EXCLUDED.date,
+		     stability = EXCLUDED.stability,
+		     difficulty_fsrs = EXCLUDED.difficulty_fsrs,
+		     due_date = EXCLUDED.due_date,
+		     reps = EXCLUDED.reps,
+		     lapses = EXCLUDED.lapses,
+		     fsrs_state = EXCLUDED.fsrs_state,
+		     last_review_at = EXCLUDED.last_review_at,
 		     updated_at = NOW()
-		 RETURNING id, user_id, title, url, difficulty, rating, date, updated_at`,
-		e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date).
-		Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date, &e.UpdatedAt)
+		 RETURNING `+cols,
+		e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date,
+		e.Stability, e.DifficultyFsrs, e.DueDate, e.Reps, e.Lapses, e.FSRSState, e.LastReviewAt).
+		Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date,
+			&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
 	if err != nil {
 		log.Printf("upsert entry: %v", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -123,15 +138,23 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 
 	for _, e := range req.Entries {
 		_, err := db.Pool.Exec(r.Context(),
-			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
 			 ON CONFLICT (user_id, url) DO UPDATE SET
 			     title = EXCLUDED.title,
 			     difficulty = EXCLUDED.difficulty,
 			     rating = EXCLUDED.rating,
 			     date = EXCLUDED.date,
+			     stability = EXCLUDED.stability,
+			     difficulty_fsrs = EXCLUDED.difficulty_fsrs,
+			     due_date = EXCLUDED.due_date,
+			     reps = EXCLUDED.reps,
+			     lapses = EXCLUDED.lapses,
+			     fsrs_state = EXCLUDED.fsrs_state,
+			     last_review_at = EXCLUDED.last_review_at,
 			     updated_at = NOW()`,
-			e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date)
+			e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date,
+			e.Stability, e.DifficultyFsrs, e.DueDate, e.Reps, e.Lapses, e.FSRSState, e.LastReviewAt)
 		if err != nil {
 			log.Printf("sync upsert: %v", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -150,8 +173,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := db.Pool.Query(r.Context(),
-		`SELECT id, user_id, title, url, difficulty, rating, date, updated_at
-		 FROM leetcode_entries WHERE user_id = $1
+		`SELECT `+cols+` FROM leetcode_entries WHERE user_id = $1
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
 		log.Printf("sync query: %v", err)
@@ -163,7 +185,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	entries := []models.Entry{}
 	for rows.Next() {
 		var e models.Entry
-		if err := rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date, &e.UpdatedAt); err != nil {
+		if err := scanEntry(&e, rows); err != nil {
 			log.Printf("sync scan: %v", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return

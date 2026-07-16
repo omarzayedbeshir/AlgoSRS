@@ -13,6 +13,13 @@ export interface LeetCodeEntry {
   date: string;
   syncStatus?: SyncStatus;
   lastSyncedAt?: string;
+  stability?: number;
+  difficultyFsrs?: number;
+  dueDate?: string;
+  reps?: number;
+  lapses?: number;
+  fsrsState?: number;
+  lastReviewAt?: string;
 }
 
 export interface ProblemData {

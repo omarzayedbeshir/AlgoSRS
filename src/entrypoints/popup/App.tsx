@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProblemData } from '../../types';
 import SavePanel from '../../components/SavePanel';
-import SavedList from '../../components/SavedList';
+import PracticeList from '../../components/PracticeList';
 import AuthPanel from '../../components/AuthPanel';
 import SyncStatus from '../../components/SyncStatus';
 import { getAuthState } from '../../lib/supabase';
@@ -72,7 +72,6 @@ export default function App() {
         <SavePanel
           problem={problem}
           onSaved={() => setView('browse')}
-          onBrowse={() => setView('browse')}
         />
         <SyncStatus isAuthenticated={authenticated} />
         <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
@@ -82,7 +81,7 @@ export default function App() {
 
   return (
     <div>
-      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} syncKey={syncKey} />
+        <PracticeList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} syncKey={syncKey} />
       <SyncStatus isAuthenticated={authenticated} />
       <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
     </div>

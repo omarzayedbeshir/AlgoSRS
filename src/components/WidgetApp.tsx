@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ProblemData, Difficulty } from '../types';
 import SavePanel from './SavePanel';
-import SavedList from './SavedList';
+import PracticeList from './PracticeList';
 import AuthPanel from './AuthPanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
@@ -91,9 +91,9 @@ export default function WidgetApp() {
         {view === 'loading' ? (
           <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
         ) : view === 'save' && problem ? (
-          <SavePanel key={problem.url} problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
+          <SavePanel key={problem.url} problem={problem} onSaved={() => setView('browse')} />
         ) : (
-          <SavedList onSaveNew={detectProblem} showNewButton isAuthenticated={authenticated} syncKey={syncKey} />
+          <PracticeList onSaveNew={detectProblem} showNewButton isAuthenticated={authenticated} syncKey={syncKey} />
         )}
         <div style={{ position: 'sticky', bottom: 0, background: '#fff', zIndex: 1 }}>
           <SyncStatus isAuthenticated={authenticated} />
