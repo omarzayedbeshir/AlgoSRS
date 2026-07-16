@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProblemData, Rating, LeetCodeEntry } from '../types';
 import { getAll, save } from '../storage';
+import { autoSync } from '../lib/sync';
 
 const RATING_META: Record<Rating, { emoji: string; label: string }> = {
   1: { emoji: '😰', label: 'Very Hard' },
@@ -49,6 +50,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
       date: new Date().toISOString(),
     };
     await save(entry);
+    autoSync();
     setSaved(true);
     setSaving(false);
     setTimeout(onSaved, 800);

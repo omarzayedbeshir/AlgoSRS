@@ -5,7 +5,6 @@ import SavedList from '../../components/SavedList';
 import AuthPanel from '../../components/AuthPanel';
 import SyncStatus from '../../components/SyncStatus';
 import { getAuthState } from '../../lib/supabase';
-import { syncAll } from '../../lib/sync';
 
 type View = 'loading' | 'save' | 'browse';
 
@@ -53,11 +52,6 @@ export default function App() {
     setView('browse');
   }
 
-  async function handleSync() {
-    await syncAll();
-    await getAuthState().then(s => setAuthenticated(s.isAuthenticated));
-  }
-
   function handleAuthChange() {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
   }
@@ -79,7 +73,7 @@ export default function App() {
           onSaved={() => setView('browse')}
           onBrowse={() => setView('browse')}
         />
-        <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+        <SyncStatus isAuthenticated={authenticated} />
         <AuthPanel onAuthChange={handleAuthChange} />
       </div>
     );
@@ -87,8 +81,8 @@ export default function App() {
 
   return (
     <div>
-      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} />
-      <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} />
+      <SyncStatus isAuthenticated={authenticated} />
       <AuthPanel onAuthChange={handleAuthChange} />
     </div>
   );

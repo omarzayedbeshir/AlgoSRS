@@ -1,15 +1,25 @@
 import { defineBackground } from 'wxt/utils/define-background';
-import { supabase } from '../lib/supabase';
+import { getSupabase } from '../lib/supabase';
 import { syncAll } from '../lib/sync';
+
+function maybeSync() {
+  const s = getSupabase();
+  if (!s) return;
+  s.auth.getSession().then(({ data }) => {
+    if (data.session) syncAll().catch(() => {});
+  });
+}
 
 export default defineBackground({
   main() {
-    supabase.auth.getSession();
+    let sb = getSupabase();
 
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      sb = getSupabase();
       switch (message.type) {
         case 'AUTH_SIGNUP':
-          supabase.auth
+          if (!sb) { sendResponse({ error: 'Supabase not configured' }); return; }
+          sb.auth
             .signUp({ email: message.payload.email, password: message.payload.password })
             .then(({ data, error }) => {
               if (error) sendResponse({ error: error.message });
@@ -18,7 +28,8 @@ export default defineBackground({
           return true;
 
         case 'AUTH_LOGIN':
-          supabase.auth
+          if (!sb) { sendResponse({ error: 'Supabase not configured' }); return; }
+          sb.auth
             .signInWithPassword({ email: message.payload.email, password: message.payload.password })
             .then(({ data, error }) => {
               if (error) sendResponse({ error: error.message });
@@ -27,11 +38,11 @@ export default defineBackground({
           return true;
 
         case 'AUTH_LOGOUT':
-          supabase.auth.signOut().then(() => sendResponse({ ok: true }));
+          sb?.auth.signOut().then(() => sendResponse({ ok: true }));
           return true;
 
         case 'AUTH_GET_SESSION':
-          supabase.auth.getSession().then(({ data }) => {
+          sb?.auth.getSession().then(({ data }) => {
             sendResponse({ session: data.session });
           });
           return true;
@@ -44,15 +55,8 @@ export default defineBackground({
       }
     });
 
-    setInterval(async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        try {
-          await syncAll();
-        } catch {
-          // silent background sync failure
-        }
-      }
-    }, 30 * 60 * 1000);
+    setInterval(maybeSync, 30 * 60 * 1000);
+
+    maybeSync();
   },
 });

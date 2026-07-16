@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 
 const BACKEND_URL = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -10,25 +10,36 @@ class ApiError extends Error {
   }
 }
 
+const TIMEOUT_MS = 10_000;
+
 async function request(path: string, options: RequestInit = {}) {
-  const { data } = await supabase.auth.getSession();
+  const sb = getSupabase();
+  const { data } = sb ? await sb.auth.getSession() : { data: null };
   const token = data.session?.access_token;
 
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new ApiError(body || res.statusText, res.status);
+  try {
+    const res = await fetch(`${BACKEND_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new ApiError(body || res.statusText, res.status);
+    }
+
+    return res.json();
+  } finally {
+    clearTimeout(timer);
   }
-
-  return res.json();
 }
 
 export const api = {

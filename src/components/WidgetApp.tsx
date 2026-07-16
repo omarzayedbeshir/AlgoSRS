@@ -5,7 +5,6 @@ import SavedList from './SavedList';
 import AuthPanel from './AuthPanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
-import { syncAll } from '../lib/sync';
 
 type View = 'loading' | 'save' | 'browse' | 'minimized';
 
@@ -34,11 +33,6 @@ export default function WidgetApp() {
     if (problem) setView('save');
     else setView('browse');
   };
-
-  async function handleSync() {
-    await syncAll();
-    await getAuthState().then(s => setAuthenticated(s.isAuthenticated));
-  }
 
   function handleAuthChange() {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
@@ -74,7 +68,7 @@ export default function WidgetApp() {
         ) : (
           <SavedList onSaveNew={detectProblem} showNewButton />
         )}
-        <SyncStatus isAuthenticated={authenticated} onSync={handleSync} />
+        <SyncStatus isAuthenticated={authenticated} />
         <AuthPanel onAuthChange={handleAuthChange} />
       </div>
 

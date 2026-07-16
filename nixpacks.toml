@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["go"]
+
+[phases.build]
+cmds = ["cd backend && go build -o lc-fsrs-backend ."]

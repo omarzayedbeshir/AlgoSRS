@@ -1,6 +1,8 @@
 node_modules/
 dist/
 output/
+.wxt/
+.output/
+backend/lc-fsrs-backend
 *.local
 .env
-.env.example

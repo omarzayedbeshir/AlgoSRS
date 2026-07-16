@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
+import { autoSync } from '../lib/sync';
 
 const RATING_EMOJI: Record<Rating, string> = {
   1: '😰', 2: '😅', 3: '🙂', 4: '😎',
@@ -15,16 +16,18 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 interface Props {
   onSaveNew: () => void;
   showNewButton?: boolean;
+  isAuthenticated?: boolean;
 }
 
-export default function SavedList({ onSaveNew, showNewButton }: Props) {
+export default function SavedList({ onSaveNew, showNewButton, isAuthenticated }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {
     loadEntries();
-  }, []);
+  }, [isAuthenticated]);
 
   async function loadEntries() {
+    await autoSync();
     const all = await getAll();
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setEntries(all);
@@ -32,6 +35,7 @@ export default function SavedList({ onSaveNew, showNewButton }: Props) {
 
   async function handleDelete(id: string) {
     await remove(id);
+    autoSync();
     loadEntries();
   }
 

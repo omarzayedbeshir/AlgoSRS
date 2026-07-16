@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, getAuthState } from '../lib/supabase';
+import { getSupabase, getAuthState } from '../lib/supabase';
 import type { AuthState } from '../types';
 
 interface Props {
@@ -13,6 +13,7 @@ export default function AuthPanel({ onAuthChange }: Props) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     getAuthState().then(setAuth);
@@ -22,18 +23,41 @@ export default function AuthPanel({ onAuthChange }: Props) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setMessage('');
 
-    const fn = mode === 'login'
-      ? supabase.auth.signInWithPassword({ email, password })
-      : supabase.auth.signUp({ email, password });
-
-    const { error: err } = await fn;
-    setLoading(false);
-
-    if (err) {
-      setError(err.message);
+    const sb = getSupabase();
+    if (!sb) {
+      setError('Supabase not configured. Check .env file.');
+      setLoading(false);
       return;
     }
+
+    if (mode === 'signup') {
+      const { data, error: err } = await sb.auth.signUp({ email, password });
+      setLoading(false);
+
+      if (err) { setError(err.message); return; }
+
+      if (!data.session) {
+        setMessage('Account created! Check your email to confirm.');
+        setEmail('');
+        setPassword('');
+        setMode('login');
+        return;
+      }
+
+      setEmail('');
+      setPassword('');
+      const state = await getAuthState();
+      setAuth(state);
+      onAuthChange();
+      return;
+    }
+
+    const { error: err } = await sb.auth.signInWithPassword({ email, password });
+    setLoading(false);
+
+    if (err) { setError(err.message); return; }
 
     setEmail('');
     setPassword('');
@@ -43,7 +67,8 @@ export default function AuthPanel({ onAuthChange }: Props) {
   }
 
   async function handleLogout() {
-    await supabase.auth.signOut();
+    const sb = getSupabase();
+    await sb?.auth.signOut();
     setAuth({ isAuthenticated: false });
     onAuthChange();
   }
@@ -103,6 +128,7 @@ export default function AuthPanel({ onAuthChange }: Props) {
           fontSize: '12px', outline: 'none',
         }}
       />
+      {message && <div style={{ color: '#22c55e', fontSize: '11px' }}>{message}</div>}
       {error && <div style={{ color: '#ef4444', fontSize: '11px' }}>{error}</div>}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
