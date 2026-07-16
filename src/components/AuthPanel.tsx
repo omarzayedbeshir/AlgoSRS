@@ -54,10 +54,18 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
       setEmail('');
       setPassword('');
       const local = await getAll();
-      if (local.length > 0) { setPendingMerge(true); return; }
+      if (local.length > 0) {
+        const state = await getAuthState();
+        setAuth(state);
+        setPendingMerge(true);
+        onAuthChange();
+        return;
+      }
       const state = await getAuthState();
       setAuth(state);
+      await autoSync();
       onAuthChange();
+      onEntriesChanged?.();
       return;
     }
 
@@ -69,10 +77,18 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     setEmail('');
     setPassword('');
     const local = await getAll();
-    if (local.length > 0) { setPendingMerge(true); return; }
+    if (local.length > 0) {
+      const state = await getAuthState();
+      setAuth(state);
+      setPendingMerge(true);
+      onAuthChange();
+      return;
+    }
     const state = await getAuthState();
     setAuth(state);
+    await autoSync();
     onAuthChange();
+    onEntriesChanged?.();
   }
 
   async function handleLogout() {
@@ -82,6 +98,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     await sb?.auth.signOut();
     setAuth({ isAuthenticated: false });
     onAuthChange();
+    onEntriesChanged?.();
   }
 
   async function handleMerge() {
@@ -89,6 +106,8 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     try { await autoSync(); } catch {}
     setPendingMerge(false);
     setMergeBusy(false);
+    const state = await getAuthState();
+    setAuth(state);
     onAuthChange();
     onEntriesChanged?.();
   }
@@ -99,6 +118,8 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     try { await syncAll(); } catch {}
     setPendingMerge(false);
     setMergeBusy(false);
+    const state = await getAuthState();
+    setAuth(state);
     onAuthChange();
     onEntriesChanged?.();
   }

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
 import { api } from '../lib/api-client';
-import { autoSync } from '../lib/sync';
 
 const RATING_EMOJI: Record<Rating, string> = {
   1: '😰', 2: '😅', 3: '🙂', 4: '😎',
@@ -25,11 +24,15 @@ export default function SavedList({ onSaveNew, showNewButton, isAuthenticated, s
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {
+    if (!isAuthenticated) { setEntries([]); return; }
     loadEntries();
-  }, [isAuthenticated, syncKey]);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) loadEntries();
+  }, [syncKey]);
 
   async function loadEntries() {
-    await autoSync();
     const all = await getAll();
     all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setEntries(all);

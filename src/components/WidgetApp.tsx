@@ -5,6 +5,7 @@ import SavedList from './SavedList';
 import AuthPanel from './AuthPanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
+import { autoSync } from '../lib/sync';
 
 type View = 'loading' | 'save' | 'browse' | 'minimized';
 
@@ -18,7 +19,12 @@ export default function WidgetApp() {
   const prevUrlRef = useRef('');
 
   useEffect(() => {
-    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
+    getAuthState().then(s => {
+      setAuthenticated(s.isAuthenticated);
+      if (s.isAuthenticated) {
+        autoSync().then(() => setSyncKey(k => k + 1));
+      }
+    });
     waitForProblemData().then(data => {
       if (data) { setProblem(data); setView('save'); return; }
       setView('browse');
