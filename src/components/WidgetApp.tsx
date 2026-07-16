@@ -45,9 +45,12 @@ export default function WidgetApp() {
     return () => clearInterval(poll);
   }, []);
 
-  const detectProblem = async () => {
-    const data = await waitForProblemData();
-    if (data) { setProblem(data); setView('save'); }
+  const detectProblem = () => {
+    const title = extractTitle();
+    const url = extractUrl();
+    if (!title || !url) return;
+    setProblem({ title, url, difficulty: tryExtractDifficulty() });
+    setView('save');
   };
 
   const isMinimized = view === 'minimized';
@@ -77,6 +80,7 @@ export default function WidgetApp() {
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '10px 14px', borderBottom: '1px solid #eee',
+          position: 'sticky', top: 0, zIndex: 1, background: '#fff',
         }}>
           <span style={{ fontWeight: 600, fontSize: '13px', color: '#555' }}>LC FSRS</span>
           <button onClick={() => setView('minimized')} style={{
@@ -87,12 +91,14 @@ export default function WidgetApp() {
         {view === 'loading' ? (
           <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
         ) : view === 'save' && problem ? (
-          <SavePanel problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
+          <SavePanel key={problem.url} problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
         ) : (
           <SavedList onSaveNew={detectProblem} showNewButton isAuthenticated={authenticated} syncKey={syncKey} />
         )}
-        <SyncStatus isAuthenticated={authenticated} />
-        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+        <div style={{ position: 'sticky', bottom: 0, background: '#fff', zIndex: 1 }}>
+          <SyncStatus isAuthenticated={authenticated} />
+          <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+        </div>
       </div>
 
       <div

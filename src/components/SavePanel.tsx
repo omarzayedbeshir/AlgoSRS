@@ -29,6 +29,10 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    setRating(null);
+    setSavedEntry(null);
+    setSaving(false);
+    setSaved(false);
     getAll().then(entries => {
       const existing = entries.find(e => e.url === problem.url);
       if (existing) {
@@ -36,7 +40,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
         setRating(existing.rating);
       }
     });
-  }, [problem]);
+  }, [problem.url]);
 
   async function handleSave() {
     if (!rating) return;
@@ -121,7 +125,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
           transition: 'background 0.15s', opacity: saving ? 0.7 : 1,
         }}
       >
-        {saved ? '✓ Saved!' : savedEntry ? 'Update Rating' : 'Save Rating'}
+        {saved ? '✓ Saved!' : savedEntry ? 'Set Rating' : 'Save Rating'}
       </button>
     </div>
   );
