@@ -13,6 +13,7 @@ export default function App() {
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [onLeetCode, setOnLeetCode] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
+  const [syncKey, setSyncKey] = useState(0);
 
   useEffect(() => {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
@@ -60,7 +61,7 @@ export default function App() {
     return (
       <div>
         <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
-        <AuthPanel onAuthChange={handleAuthChange} />
+        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
       </div>
     );
   }
@@ -74,16 +75,16 @@ export default function App() {
           onBrowse={() => setView('browse')}
         />
         <SyncStatus isAuthenticated={authenticated} />
-        <AuthPanel onAuthChange={handleAuthChange} />
+        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
       </div>
     );
   }
 
   return (
     <div>
-      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} />
+      <SavedList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} syncKey={syncKey} />
       <SyncStatus isAuthenticated={authenticated} />
-      <AuthPanel onAuthChange={handleAuthChange} />
+      <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
     </div>
   );
 }

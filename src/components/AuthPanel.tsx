@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { getSupabase, getAuthState } from '../lib/supabase';
+import { getAll, clearAll } from '../storage';
+import { autoSync, syncAll } from '../lib/sync';
 import type { AuthState } from '../types';
 
 interface Props {
   onAuthChange: () => void;
+  onEntriesChanged?: () => void;
 }
 
-export default function AuthPanel({ onAuthChange }: Props) {
+export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,6 +17,8 @@ export default function AuthPanel({ onAuthChange }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [pendingMerge, setPendingMerge] = useState(false);
+  const [mergeBusy, setMergeBusy] = useState(false);
 
   useEffect(() => {
     getAuthState().then(setAuth);
@@ -48,6 +53,8 @@ export default function AuthPanel({ onAuthChange }: Props) {
 
       setEmail('');
       setPassword('');
+      const local = await getAll();
+      if (local.length > 0) { setPendingMerge(true); return; }
       const state = await getAuthState();
       setAuth(state);
       onAuthChange();
@@ -61,16 +68,80 @@ export default function AuthPanel({ onAuthChange }: Props) {
 
     setEmail('');
     setPassword('');
+    const local = await getAll();
+    if (local.length > 0) { setPendingMerge(true); return; }
     const state = await getAuthState();
     setAuth(state);
     onAuthChange();
   }
 
   async function handleLogout() {
+    try { await autoSync(); } catch {}
+    await clearAll();
     const sb = getSupabase();
     await sb?.auth.signOut();
     setAuth({ isAuthenticated: false });
     onAuthChange();
+  }
+
+  async function handleMerge() {
+    setMergeBusy(true);
+    try { await autoSync(); } catch {}
+    setPendingMerge(false);
+    setMergeBusy(false);
+    onAuthChange();
+    onEntriesChanged?.();
+  }
+
+  async function handleReplace() {
+    setMergeBusy(true);
+    await clearAll();
+    try { await syncAll(); } catch {}
+    setPendingMerge(false);
+    setMergeBusy(false);
+    onAuthChange();
+    onEntriesChanged?.();
+  }
+
+  if (pendingMerge) {
+    return (
+      <div style={{ padding: '14px', borderTop: '1px solid #eee' }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px', color: '#333' }}>
+          Local entries found
+        </div>
+        <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', lineHeight: 1.5 }}>
+          You have saved entries locally. What would you like to do with them?
+        </div>
+        <button
+          onClick={handleMerge}
+          disabled={mergeBusy}
+          style={{
+            width: '100%', padding: '8px', borderRadius: '6px', border: 'none',
+            background: '#2563eb', color: '#fff', fontSize: '12px', fontWeight: 500,
+            cursor: mergeBusy ? 'default' : 'pointer', marginBottom: '8px', opacity: mergeBusy ? 0.7 : 1,
+          }}
+        >
+          {mergeBusy ? 'Working...' : 'Merge with account'}
+        </button>
+        <div style={{ fontSize: '11px', color: '#999', marginBottom: '10px', lineHeight: 1.4 }}>
+          Keeps your local entries and syncs them to your account.
+        </div>
+        <button
+          onClick={handleReplace}
+          disabled={mergeBusy}
+          style={{
+            width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0',
+            background: '#fff', color: '#666', fontSize: '12px', fontWeight: 500,
+            cursor: mergeBusy ? 'default' : 'pointer', opacity: mergeBusy ? 0.5 : 1,
+          }}
+        >
+          Replace with cloud data
+        </button>
+        <div style={{ fontSize: '11px', color: '#999', marginTop: '6px', lineHeight: 1.4 }}>
+          Removes local entries and downloads from your account.
+        </div>
+      </div>
+    );
   }
 
   if (auth.isAuthenticated) {

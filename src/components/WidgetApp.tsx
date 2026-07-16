@@ -14,6 +14,7 @@ export default function WidgetApp() {
   const [view, setView] = useState<View>('loading');
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
+  const [syncKey, setSyncKey] = useState(0);
 
   useEffect(() => {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
@@ -66,10 +67,10 @@ export default function WidgetApp() {
         ) : view === 'save' && problem ? (
           <SavePanel problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
         ) : (
-          <SavedList onSaveNew={detectProblem} showNewButton />
+          <SavedList onSaveNew={detectProblem} showNewButton isAuthenticated={authenticated} syncKey={syncKey} />
         )}
         <SyncStatus isAuthenticated={authenticated} />
-        <AuthPanel onAuthChange={handleAuthChange} />
+        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
       </div>
 
       <div

@@ -17,14 +17,15 @@ interface Props {
   onSaveNew: () => void;
   showNewButton?: boolean;
   isAuthenticated?: boolean;
+  syncKey?: number;
 }
 
-export default function SavedList({ onSaveNew, showNewButton, isAuthenticated }: Props) {
+export default function SavedList({ onSaveNew, showNewButton, isAuthenticated, syncKey }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {
     loadEntries();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, syncKey]);
 
   async function loadEntries() {
     await autoSync();
