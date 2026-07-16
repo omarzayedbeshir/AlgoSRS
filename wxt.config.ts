@@ -12,14 +12,7 @@ export default defineConfig({
       '*://leetcode.com/*',
       'https://*.supabase.co/*',
       'http://localhost:8080/*',
+      'https://lc-fsrs-production.up.railway.app/*',
     ],
-    browser_specific_settings: {
-      gecko: {
-        id: 'lc-fsrs@example.com',
-      },
-    },
-  },
-  suppressWarnings: {
-    firefoxDataCollection: true,
   },
 });

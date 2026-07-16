@@ -27,15 +27,17 @@ export async function syncAll(): Promise<void> {
 }
 
 export async function autoSync(): Promise<void> {
-  if (_syncing) return;
+  if (_syncing) { console.log('[sync] already syncing, skip'); return; }
   const state = await getAuthState();
-  if (!state.isAuthenticated) return;
+  if (!state.isAuthenticated) { console.log('[sync] not authenticated, skip'); return; }
 
   _syncing = true;
+  console.log('[sync] starting sync...');
   try {
     await syncAll();
-  } catch {
-    // silent — local is source of truth
+    console.log('[sync] sync complete');
+  } catch (err) {
+    console.error('[sync] sync failed:', err);
   } finally {
     _syncing = false;
   }
