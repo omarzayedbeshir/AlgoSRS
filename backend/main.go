@@ -31,5 +31,5 @@ func main() {
 	}
 
 	log.Printf("listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+	log.Fatal(http.ListenAndServe(":"+port, middleware.CORS(mux)))
 }
