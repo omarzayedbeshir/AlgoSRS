@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
 import { api } from '../lib/api-client';
-import ReviewPanel from './ReviewPanel';
 
 const RATING_EMOJI: Record<Rating, string> = {
   1: '😰', 2: '😅', 3: '🙂', 4: '😎',
@@ -23,7 +22,6 @@ interface Props {
 
 export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated, syncKey }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
-  const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadEntries();
@@ -52,22 +50,6 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
     if (diff === 0) return 'Due today';
     if (diff === 1) return 'Tomorrow';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  if (reviewingId) {
-    const entry = entries.find(e => e.id === reviewingId);
-    if (entry) {
-      return (
-        <ReviewPanel
-          entry={entry}
-          onComplete={() => {
-            setReviewingId(null);
-            loadEntries();
-          }}
-        />
-      );
-    }
-    setReviewingId(null);
   }
 
   const now = new Date();
@@ -174,16 +156,6 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
         <span style={{ fontSize: '11px', color: '#999', whiteSpace: 'nowrap' }}>
           {formatDueDate(entry.dueDate)}
         </span>
-        <button
-          onClick={() => setReviewingId(entry.id)}
-          title="Review"
-          style={{
-            background: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px',
-            padding: '2px 8px', fontSize: '11px', cursor: 'pointer', fontWeight: 500,
-          }}
-        >
-          {RATING_EMOJI[entry.rating]}
-        </button>
         <button
           onClick={() => handleDelete(entry.id)}
           title="Delete"

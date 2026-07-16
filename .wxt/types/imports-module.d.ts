@@ -21,6 +21,7 @@ declare module '#imports' {
   export { default as PracticeList } from '../src/components/PracticeList';
   export { default as ReviewPanel } from '../src/components/ReviewPanel';
   export { default as SavePanel } from '../src/components/SavePanel';
+  export { default as SavedList } from '../src/components/SavedList';
   export { default as SyncStatus } from '../src/components/SyncStatus';
   export { default as WidgetApp } from '../src/components/WidgetApp';
 }
