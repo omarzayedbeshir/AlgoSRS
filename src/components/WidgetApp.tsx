@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { ProblemData, Difficulty } from '../types';
 import SavePanel from './SavePanel';
 import SavedList from './SavedList';
@@ -15,6 +15,7 @@ export default function WidgetApp() {
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [syncKey, setSyncKey] = useState(0);
+  const prevUrlRef = useRef('');
 
   useEffect(() => {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
@@ -22,6 +23,19 @@ export default function WidgetApp() {
       if (data) { setProblem(data); setView('save'); return; }
       setView('browse');
     });
+  }, []);
+
+  useEffect(() => {
+    const poll = setInterval(() => {
+      const data = extractProblemData();
+      const currentUrl = window.location.href;
+      if (data && data.url !== prevUrlRef.current) {
+        prevUrlRef.current = data.url;
+        setProblem(data);
+        setView('save');
+      }
+    }, 1000);
+    return () => clearInterval(poll);
   }, []);
 
   const detectProblem = async () => {
@@ -45,7 +59,8 @@ export default function WidgetApp() {
         width: '300px', maxHeight: '480px', borderRadius: '12px',
         background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontSize: '14px', color: '#1a1a1a', overflow: 'hidden',
+        fontSize: '14px', color: '#1a1a1a', overflowY: 'auto',
+        scrollbarWidth: 'thin', scrollbarColor: '#d0d0d0 transparent',
         transition: T,
         opacity: isMinimized ? 0 : 1,
         transform: isMinimized ? 'scale(0.85)' : 'scale(1)',
@@ -130,17 +145,19 @@ function extractUrl(): string | null {
 }
 
 function extractDifficulty(): Difficulty {
+  const badge = document.querySelector('[data-difficulty]');
+  if (badge) {
+    const d = badge.getAttribute('data-difficulty')?.toLowerCase();
+    if (d === 'easy' || d === 'medium' || d === 'hard') return d;
+  }
+  const diffEl = document.querySelector('.text-difficulty-easy, .text-difficulty-medium, .text-difficulty-hard, [class*="difficulty"]');
+  if (diffEl?.textContent) {
+    const t = diffEl.textContent.trim().toLowerCase();
+    if (t === 'easy' || t === 'medium' || t === 'hard') return t;
+  }
   const diffMatch = document.documentElement.innerHTML.match(/"difficulty"\s*:\s*"(Easy|Medium|Hard)"/);
   if (diffMatch) {
     return diffMatch[1].toLowerCase() as Difficulty;
-  }
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let node;
-  while (node = walker.nextNode()) {
-    const text = node.textContent?.trim();
-    if (text === 'Easy') return 'easy';
-    if (text === 'Medium') return 'medium';
-    if (text === 'Hard') return 'hard';
   }
   return 'medium';
 }

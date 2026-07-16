@@ -105,11 +105,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
 
   if (pendingMerge) {
     return (
-      <div style={{ padding: '14px', borderTop: '1px solid #eee' }}>
-        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '10px', color: '#333' }}>
+      <div style={{ padding: '10px', borderTop: '1px solid #eee' }}>
+        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#333' }}>
           Local entries found
         </div>
-        <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px', lineHeight: 1.5 }}>
+        <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px', lineHeight: 1.4 }}>
           You have saved entries locally. What would you like to do with them?
         </div>
         <button
@@ -118,12 +118,12 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
           style={{
             width: '100%', padding: '8px', borderRadius: '6px', border: 'none',
             background: '#2563eb', color: '#fff', fontSize: '12px', fontWeight: 500,
-            cursor: mergeBusy ? 'default' : 'pointer', marginBottom: '8px', opacity: mergeBusy ? 0.7 : 1,
+            cursor: mergeBusy ? 'default' : 'pointer', marginBottom: '4px', opacity: mergeBusy ? 0.7 : 1,
           }}
         >
           {mergeBusy ? 'Working...' : 'Merge with account'}
         </button>
-        <div style={{ fontSize: '11px', color: '#999', marginBottom: '10px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '11px', color: '#999', marginBottom: '6px', lineHeight: 1.3 }}>
           Keeps your local entries and syncs them to your account.
         </div>
         <button
@@ -137,7 +137,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
         >
           Replace with cloud data
         </button>
-        <div style={{ fontSize: '11px', color: '#999', marginTop: '6px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '11px', color: '#999', marginTop: '4px', lineHeight: 1.3 }}>
           Removes local entries and downloads from your account.
         </div>
       </div>
@@ -173,7 +173,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
 
   return (
     <form onSubmit={handleSubmit} style={{
-      padding: '12px 14px', borderTop: '1px solid #eee',
+      padding: '8px 14px', borderTop: '1px solid #eee',
       display: 'flex', flexDirection: 'column', gap: '8px',
     }}>
       <input
