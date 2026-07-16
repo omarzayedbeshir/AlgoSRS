@@ -27,14 +27,15 @@ export default function WidgetApp() {
 
   useEffect(() => {
     const poll = setInterval(() => {
-      const data = extractProblemData();
-      const currentUrl = window.location.href;
-      if (data && data.url !== prevUrlRef.current) {
-        prevUrlRef.current = data.url;
-        setProblem(data);
-        setView('save');
-      }
-    }, 1000);
+      extractProblemData().then(data => {
+        const currentUrl = window.location.href;
+        if (data && data.url !== prevUrlRef.current) {
+          prevUrlRef.current = data.url;
+          setProblem(data);
+          setView('save');
+        }
+      });
+    }, 2000);
     return () => clearInterval(poll);
   }, []);
 
@@ -118,10 +119,10 @@ async function waitForProblemData(): Promise<ProblemData | null> {
   return null;
 }
 
-function extractProblemData(): ProblemData | null {
+async function extractProblemData(): Promise<ProblemData | null> {
   const title = extractTitle();
   const url = extractUrl();
-  const difficulty = extractDifficulty();
+  const difficulty = await extractDifficulty();
   if (!title || !url) return null;
   return { title, url, difficulty };
 }
@@ -144,7 +145,7 @@ function extractUrl(): string | null {
   return match ? match[0] : null;
 }
 
-function extractDifficulty(): Difficulty {
+function tryExtractDifficulty(): Difficulty {
   const badge = document.querySelector('[data-difficulty]');
   if (badge) {
     const d = badge.getAttribute('data-difficulty')?.toLowerCase();
@@ -160,4 +161,13 @@ function extractDifficulty(): Difficulty {
     return diffMatch[1].toLowerCase() as Difficulty;
   }
   return 'medium';
+}
+
+async function extractDifficulty(): Promise<Difficulty> {
+  for (let i = 0; i < 10; i++) {
+    const d = tryExtractDifficulty();
+    if (d !== 'medium') return d;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return tryExtractDifficulty();
 }
