@@ -118,7 +118,7 @@ export default function WidgetApp() {
 
 async function waitForProblemData(): Promise<ProblemData | null> {
   for (let i = 0; i < 30; i++) {
-    const data = extractProblemData();
+    const data = await extractProblemData();
     if (data) return data;
     await new Promise(r => setTimeout(r, 200));
   }
@@ -128,6 +128,7 @@ async function waitForProblemData(): Promise<ProblemData | null> {
 async function extractProblemData(): Promise<ProblemData | null> {
   const title = extractTitle();
   const url = extractUrl();
+  if (!title || !url) return null;
   const difficulty = await extractDifficulty();
   if (!title || !url) return null;
   return { title, url, difficulty };

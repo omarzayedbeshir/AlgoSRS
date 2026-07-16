@@ -24,13 +24,8 @@ export default function SavedList({ onSaveNew, showNewButton, isAuthenticated, s
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated) { setEntries([]); return; }
     loadEntries();
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (isAuthenticated) loadEntries();
-  }, [syncKey]);
+  }, [isAuthenticated, syncKey]);
 
   async function loadEntries() {
     const all = await getAll();
