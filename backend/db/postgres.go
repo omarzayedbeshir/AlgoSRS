@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,10 +17,15 @@ func Connect() error {
 		return fmt.Errorf("DATABASE_URL not set")
 	}
 
-	var err error
-	Pool, err = pgxpool.New(context.Background(), databaseURL)
+	config, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
-		return fmt.Errorf("unable to connect to database: %w", err)
+		return fmt.Errorf("unable to parse database config: %w", err)
+	}
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+
+	Pool, err = pgxpool.NewWithConfig(context.Background(), config)
+	if err != nil {
+		return fmt.Errorf("unable to create pool: %w", err)
 	}
 
 	if err := Pool.Ping(context.Background()); err != nil {
