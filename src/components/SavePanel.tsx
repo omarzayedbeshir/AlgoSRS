@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProblemData, Rating, LeetCodeEntry } from '../types';
 import { getAll, save } from '../storage';
-import { autoSync } from '../lib/sync';
+import { api } from '../lib/api-client';
 import { reviewEntry } from '../lib/fsrs';
 
 const RATING_META: Record<Rating, { emoji: string; label: string }> = {
@@ -55,7 +55,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
     };
     const entry = { ...reviewEntry(savedEntry ?? base, rating).updatedEntry, rating, date: now.toISOString() };
     await save(entry);
-    autoSync();
+    try { await api.upsertEntry(entry); } catch (err) { console.error('save sync failed:', err); }
     setSaved(true);
     setSaving(false);
     setTimeout(onSaved, 800);

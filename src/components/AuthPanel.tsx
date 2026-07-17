@@ -95,8 +95,10 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   }
 
   async function handleLogout() {
-    try { await autoSync(); } catch {}
-    await clearAll();
+    try {
+      await autoSync();
+      await clearAll();
+    } catch {}
     const sb = getSupabase();
     await sb?.auth.signOut();
     setAuth({ isAuthenticated: false });

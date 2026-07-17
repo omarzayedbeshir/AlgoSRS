@@ -3,11 +3,12 @@ import type { ProblemData, Difficulty } from '../types';
 import SavePanel from './SavePanel';
 import PracticeList from './PracticeList';
 import AuthPanel from './AuthPanel';
+import ProfilePanel from './ProfilePanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
 
-type View = 'loading' | 'save' | 'browse' | 'minimized';
+type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile';
 
 const T = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -81,6 +82,29 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
   }
 
+  function handleShowProfile() {
+    setView('profile');
+  }
+
+  if (view === 'profile') {
+    return (
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
+        <div style={{
+          width: '300px', maxHeight: '480px', borderRadius: '12px',
+          background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontSize: '14px', color: '#1a1a1a', overflowY: 'auto',
+        }}>
+          <ProfilePanel
+            onBack={() => setView('browse')}
+            onAuthChange={handleAuthChange}
+            onEntriesChanged={() => setSyncKey(k => k + 1)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
       <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
       <div style={{
@@ -115,7 +139,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
         )}
         <div style={{ position: 'sticky', bottom: 0, background: '#fff', zIndex: 1 }}>
           <SyncStatus isAuthenticated={authenticated} />
-          <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+          <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} onShowProfile={handleShowProfile} />
         </div>
       </div>
 

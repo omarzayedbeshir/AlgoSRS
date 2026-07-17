@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase';
+import type { LeetCodeEntry } from '../types';
 
 const BACKEND_URL = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
@@ -45,14 +46,7 @@ async function request(path: string, options: RequestInit = {}) {
 export const api = {
   listEntries: () => request('/api/entries'),
 
-  upsertEntry: (entry: {
-    id: string;
-    title: string;
-    url: string;
-    difficulty: string;
-    rating: number;
-    date: string;
-  }) =>
+  upsertEntry: (entry: LeetCodeEntry) =>
     request('/api/entries', {
       method: 'POST',
       body: JSON.stringify(entry),

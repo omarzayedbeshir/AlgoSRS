@@ -189,7 +189,7 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 
 	err := db.Pool.QueryRow(r.Context(),
 		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
+		 VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $7 = '' OR $7 IS NULL THEN NOW() ELSE $7::timestamptz END, NOW(), $8, $9, NULLIF($10, '')::timestamptz, $11, $12, $13, NULLIF($14, '')::timestamptz)
 		 ON CONFLICT (user_id, url) DO UPDATE SET
 		     title = EXCLUDED.title,
 		     difficulty = EXCLUDED.difficulty,
@@ -262,7 +262,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	for _, e := range req.Entries {
 		_, err := db.Pool.Exec(r.Context(),
 			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
+			 VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $7 = '' OR $7 IS NULL THEN NOW() ELSE $7::timestamptz END, NOW(), $8, $9, NULLIF($10, '')::timestamptz, $11, $12, $13, NULLIF($14, '')::timestamptz)
 			 ON CONFLICT (user_id, url) DO UPDATE SET
 			     title = EXCLUDED.title,
 			     difficulty = EXCLUDED.difficulty,
