@@ -47,7 +47,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       if (err) { setError(err.message); return; }
 
       if (!data.session) {
-        setMessage('Account created! Check your email to confirm.');
+        setMessage("Account created! Check your email (and spam) to confirm.");
         setEmail('');
         setPassword('');
         setMode('login');
@@ -268,7 +268,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
               Check your email
             </div>
             <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.4, marginBottom: '8px' }}>
-              We've sent a password reset link to <strong>{email}</strong>.
+              We've sent a password reset link to <strong>{email}</strong>. Check spam if you don't see it.
             </div>
             <button
               type="button"
