@@ -19,6 +19,8 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
   const [message, setMessage] = useState('');
   const [pendingMerge, setPendingMerge] = useState(false);
   const [mergeBusy, setMergeBusy] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     getAuthState().then(setAuth);
@@ -112,6 +114,54 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     onEntriesChanged?.();
   }
 
+  function handleForgotPassword() {
+    setResetMode(true);
+    setError('');
+    setMessage('');
+  }
+
+  function handleBackToLogin() {
+    setResetMode(false);
+    setResetSent(false);
+    setError('');
+    setMessage('');
+  }
+
+  async function handleSendReset(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const supabaseUrl = import.meta.env.WXT_PUBLIC_SUPABASE_URL;
+    const anonKey = import.meta.env.WXT_PUBLIC_SUPABASE_ANON_KEY;
+    const backendUrl = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
+    try {
+      const res = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({
+          email,
+          redirect_to: `${backendUrl}/auth/reset-password`,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.msg || 'Failed to send reset email.');
+      }
+
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleReplace() {
     setMergeBusy(true);
     await clearAll();
@@ -192,6 +242,77 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
     );
   }
 
+  if (resetMode) {
+    return (
+      <form onSubmit={handleSendReset} style={{
+        padding: '8px 14px', borderTop: '1px solid #eee',
+        display: 'flex', flexDirection: 'column', gap: '8px',
+      }}>
+        {resetSent ? (
+          <>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#333', marginBottom: '4px' }}>
+              Check your email
+            </div>
+            <div style={{ fontSize: '12px', color: '#666', lineHeight: 1.4, marginBottom: '8px' }}>
+              We've sent a password reset link to <strong>{email}</strong>.
+            </div>
+            <button
+              type="button"
+              onClick={handleBackToLogin}
+              style={{
+                background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
+                fontSize: '12px', textDecoration: 'underline', padding: 0, alignSelf: 'flex-start',
+              }}
+            >
+              Back to sign in
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#333', marginBottom: '4px' }}>
+              Reset your password
+            </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              style={{
+                padding: '6px 8px', borderRadius: '6px', border: '1px solid #d0d0d0',
+                fontSize: '12px', outline: 'none',
+              }}
+            />
+            {error && <div style={{ color: '#ef4444', fontSize: '11px' }}>{error}</div>}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '6px 14px', borderRadius: '6px', border: 'none',
+                  background: '#2563eb', color: '#fff', fontSize: '12px',
+                  cursor: 'pointer', fontWeight: 500, opacity: loading ? 0.7 : 1,
+                }}
+              >
+                {loading ? '...' : 'Send reset link'}
+              </button>
+              <button
+                type="button"
+                onClick={handleBackToLogin}
+                style={{
+                  background: 'none', border: 'none', color: '#666', cursor: 'pointer',
+                  fontSize: '11px', textDecoration: 'underline', padding: 0,
+                }}
+              >
+                Back to sign in
+              </button>
+            </div>
+          </>
+        )}
+      </form>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} style={{
       padding: '8px 14px', borderTop: '1px solid #eee',
@@ -220,6 +341,19 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
           fontSize: '12px', outline: 'none',
         }}
       />
+      {mode === 'login' && (
+        <button
+          type="button"
+          onClick={handleForgotPassword}
+          style={{
+            background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
+            fontSize: '11px', textDecoration: 'underline', padding: 0, alignSelf: 'flex-end',
+            marginTop: '-4px',
+          }}
+        >
+          Forgot password?
+        </button>
+      )}
       {message && <div style={{ color: '#22c55e', fontSize: '11px' }}>{message}</div>}
       {error && <div style={{ color: '#ef4444', fontSize: '11px' }}>{error}</div>}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

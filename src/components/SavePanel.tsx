@@ -53,9 +53,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
       difficulty: problem.difficulty, rating,
       date: now.toISOString(),
     };
-    const entry = savedEntry
-      ? { ...savedEntry, ...base, date: now.toISOString() }
-      : reviewEntry(base, rating).updatedEntry;
+    const entry = { ...reviewEntry(savedEntry ?? base, rating).updatedEntry, rating, date: now.toISOString() };
     await save(entry);
     autoSync();
     setSaved(true);
@@ -128,7 +126,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
           transition: 'background 0.15s', opacity: saving ? 0.7 : 1,
         }}
       >
-        {saved ? '✓ Saved!' : savedEntry ? 'Set Rating' : 'Save Rating'}
+        {saved ? '✓ Saved!' : 'Save Rating'}
       </button>
     </div>
   );
