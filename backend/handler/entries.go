@@ -252,6 +252,46 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+
+	_, err := db.Pool.Exec(r.Context(),
+		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
+	if err != nil {
+		log.Printf("delete user entries: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	supabaseURL := os.Getenv("SUPABASE_URL")
+	serviceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
+	if supabaseURL == "" || serviceRoleKey == "" {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server not configured for user deletion"})
+		return
+	}
+
+	adminReq, _ := http.NewRequestWithContext(r.Context(), "DELETE",
+		supabaseURL+"/auth/v1/admin/users/"+userID, nil)
+	adminReq.Header.Set("Authorization", "Bearer "+serviceRoleKey)
+	adminReq.Header.Set("Content-Type", "application/json")
+
+	adminRes, err := http.DefaultClient.Do(adminReq)
+	if err != nil {
+		log.Printf("delete user admin: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	adminRes.Body.Close()
+
+	if adminRes.StatusCode < 200 || adminRes.StatusCode >= 300 {
+		log.Printf("delete user admin: status %d", adminRes.StatusCode)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to delete auth user"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
 func DeleteAllEntries(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 

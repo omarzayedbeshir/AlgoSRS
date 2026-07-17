@@ -60,6 +60,9 @@ export const api = {
   deleteAllEntries: () =>
     request('/api/user/entries', { method: 'DELETE' }),
 
+  deleteUser: () =>
+    request('/api/user', { method: 'DELETE' }),
+
   sync: (entries: any[], deletedIds: string[]) =>
     request('/api/sync', {
       method: 'POST',

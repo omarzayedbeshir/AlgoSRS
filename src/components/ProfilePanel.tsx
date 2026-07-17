@@ -53,30 +53,15 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
   async function handleDeleteAccount() {
     setBusy(true);
     try {
-      await api.deleteAllEntries();
-    } catch {}
-
-    const sb = getSupabase();
-    if (sb) {
-      const { data } = await sb.auth.getSession();
-      const token = data.session?.access_token;
-      if (token) {
-        try {
-          await fetch(
-            `${import.meta.env.WXT_PUBLIC_SUPABASE_URL}/auth/v1/user`,
-            {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': import.meta.env.WXT_PUBLIC_SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${token}`,
-              },
-            },
-          );
-        } catch {}
-      }
+      await api.deleteUser();
+    } catch (e) {
+      setBusy(false);
+      setConfirmAction(null);
+      setConfirmText('');
+      return;
     }
 
+    const sb = getSupabase();
     await clearAll();
     await sb?.auth.signOut();
     setConfirmAction(null);
