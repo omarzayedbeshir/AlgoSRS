@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"lc-fsrs-backend/db"
 	"lc-fsrs-backend/middleware"
@@ -13,6 +14,20 @@ import (
 )
 
 const cols = "id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at"
+
+func sanitizeEntry(e *models.Entry) {
+	if e.Date == "" {
+		e.Date = time.Now().UTC().Format(time.RFC3339)
+	}
+	if e.DueDate == nil || *e.DueDate == "" {
+		now := time.Now().UTC().Format(time.RFC3339)
+		e.DueDate = &now
+	}
+	if e.LastReviewAt == nil || *e.LastReviewAt == "" {
+		now := time.Now().UTC().Format(time.RFC3339)
+		e.LastReviewAt = &now
+	}
+}
 
 func scanEntry(e *models.Entry, rows interface{ Scan(...interface{}) error }) error {
 	return rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date,
@@ -186,6 +201,7 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
+	sanitizeEntry(&e)
 
 	err := db.Pool.QueryRow(r.Context(),
 		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
@@ -259,7 +275,8 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, e := range req.Entries {
+	for i := range req.Entries {
+		sanitizeEntry(&req.Entries[i])
 		_, err := db.Pool.Exec(r.Context(),
 			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
 			 VALUES ($1, $2, $3, $4, $5, $6, CASE WHEN $7 = '' OR $7 IS NULL THEN NOW() ELSE $7::timestamptz END, NOW(), $8, $9, CASE WHEN $10 = '' OR $10 IS NULL THEN NOW() ELSE $10::timestamptz END, $11, $12, $13, CASE WHEN $14 = '' OR $14 IS NULL THEN NOW() ELSE $14::timestamptz END)
@@ -276,8 +293,8 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			     fsrs_state = EXCLUDED.fsrs_state,
 			     last_review_at = EXCLUDED.last_review_at,
 			     updated_at = NOW()`,
-			e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date,
-			e.Stability, e.DifficultyFsrs, e.DueDate, e.Reps, e.Lapses, e.FSRSState, e.LastReviewAt)
+			req.Entries[i].ID, userID, req.Entries[i].Title, req.Entries[i].URL, req.Entries[i].Difficulty, req.Entries[i].Rating, req.Entries[i].Date,
+			req.Entries[i].Stability, req.Entries[i].DifficultyFsrs, req.Entries[i].DueDate, req.Entries[i].Reps, req.Entries[i].Lapses, req.Entries[i].FSRSState, req.Entries[i].LastReviewAt)
 		if err != nil {
 			log.Printf("sync upsert: %v", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
