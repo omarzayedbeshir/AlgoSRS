@@ -3,8 +3,8 @@ import type { LeetCodeEntry } from './types';
 const ENTRIES_KEY = 'lc-fsrs-entries';
 
 export async function getAll(): Promise<LeetCodeEntry[]> {
-  const result = await chrome.storage.local.get(ENTRIES_KEY);
-  return result[ENTRIES_KEY] || [];
+  const result = await chrome.storage.local.get<Record<string, LeetCodeEntry[]>>(ENTRIES_KEY);
+  return result[ENTRIES_KEY] ?? [];
 }
 
 export async function save(entry: LeetCodeEntry): Promise<void> {

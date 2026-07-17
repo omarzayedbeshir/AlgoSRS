@@ -13,7 +13,7 @@ function getSupabase(): SupabaseClient | null {
   const chromeStorageAdapter = {
     getItem: async (k: string) => {
       const r = await chrome.storage.local.get(k);
-      return r[k] ?? null;
+      return (r[k] as string) ?? null;
     },
     setItem: async (k: string, v: string) => {
       await chrome.storage.local.set({ [k]: v });

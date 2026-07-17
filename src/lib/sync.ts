@@ -15,7 +15,7 @@ export async function syncAll(): Promise<void> {
   for (const e of localEntries) merged.set(e.url, e);
   for (const e of remoteEntries) {
     const existing = merged.get(e.url);
-    if (!existing || new Date(e.updated_at || e.date) > new Date(existing.date)) {
+    if (!existing || new Date(e.date) > new Date(existing.date)) {
       merged.set(e.url, { ...e, syncStatus: 'synced', lastSyncedAt: new Date().toISOString() });
     }
   }

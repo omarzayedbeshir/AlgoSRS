@@ -1,4 +1,4 @@
-import { fsrs, createEmptyCard, Rating as FsrsRating } from 'ts-fsrs';
+import { fsrs, createEmptyCard, Rating as FsrsRating, Grade } from 'ts-fsrs';
 import type { LeetCodeEntry, Rating } from '../types';
 
 const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9, enable_short_term: false });
@@ -28,7 +28,7 @@ export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
 export function getRetrievability(entry: LeetCodeEntry): number | null {
   if (entry.fsrsState === undefined || entry.fsrsState === 0 || !entry.lastReviewAt) return null;
   const card = cardFromEntry(entry);
-  return scheduler.get_retrievability(card, new Date());
+  return scheduler.get_retrievability(card, new Date(), false);
 }
 
 function cardFromEntry(entry: LeetCodeEntry) {
@@ -47,12 +47,12 @@ function cardFromEntry(entry: LeetCodeEntry) {
   return card;
 }
 
-function gradeToFsrs(grade: Rating): FsrsRating {
+function gradeToFsrs(grade: Rating): Grade {
   const map: Record<Rating, FsrsRating> = {
     1: FsrsRating.Again,
     2: FsrsRating.Hard,
     3: FsrsRating.Good,
     4: FsrsRating.Easy,
   };
-  return map[grade];
+  return map[grade] as Grade;
 }

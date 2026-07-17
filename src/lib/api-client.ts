@@ -16,7 +16,7 @@ const TIMEOUT_MS = 10_000;
 async function request(path: string, options: RequestInit = {}) {
   const sb = getSupabase();
   const { data } = sb ? await sb.auth.getSession() : { data: null };
-  const token = data.session?.access_token;
+  const token = data?.session?.access_token;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);

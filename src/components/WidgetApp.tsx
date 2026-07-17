@@ -88,7 +88,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
 
   if (view === 'profile') {
     return (
-      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px', background: '#fff' }}>
         <div style={{
           width: '300px', maxHeight: '480px', borderRadius: '12px',
           background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
@@ -106,7 +106,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
   }
 
   return (
-      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px', background: '#fff' }}>
       <div style={{
         width: '300px', maxHeight: '480px', borderRadius: '12px',
         background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
