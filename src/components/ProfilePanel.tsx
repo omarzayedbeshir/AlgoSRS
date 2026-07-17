@@ -10,7 +10,7 @@ interface Props {
   onEntriesChanged?: () => void;
 }
 
-const RATING_EMOJI: Record<number, string> = { 1: '⭐', 2: '⭐⭐', 3: '⭐⭐⭐', 4: '⭐⭐⭐⭐' };
+const RATING_EMOJI: Record<number, string> = { 1: '😰', 2: '😅', 3: '🙂', 4: '😎' };
 
 export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
