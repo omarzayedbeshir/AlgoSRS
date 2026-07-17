@@ -272,6 +272,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	adminReq, _ := http.NewRequestWithContext(r.Context(), "DELETE",
 		supabaseURL+"/auth/v1/admin/users/"+userID, nil)
+	adminReq.Header.Set("apikey", serviceRoleKey)
 	adminReq.Header.Set("Authorization", "Bearer "+serviceRoleKey)
 	adminReq.Header.Set("Content-Type", "application/json")
 
