@@ -236,6 +236,20 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
+func DeleteAllEntries(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+
+	_, err := db.Pool.Exec(r.Context(),
+		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
+	if err != nil {
+		log.Printf("delete all entries: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+}
+
 func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 

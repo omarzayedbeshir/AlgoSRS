@@ -7,9 +7,10 @@ import type { AuthState } from '../types';
 interface Props {
   onAuthChange: () => void;
   onEntriesChanged?: () => void;
+  onShowProfile?: () => void;
 }
 
-export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
+export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfile }: Props) {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -229,6 +230,17 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged }: Props) {
         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {auth.email}
         </span>
+        {onShowProfile && (
+          <button
+            onClick={onShowProfile}
+            style={{
+              background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
+              fontSize: '11px', textDecoration: 'underline', padding: 0, marginRight: '4px',
+            }}
+          >
+            Profile
+          </button>
+        )}
         <button
           onClick={handleLogout}
           style={{

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import type { ProblemData } from '../../types';
 import SavePanel from '../../components/SavePanel';
 import PracticeList from '../../components/PracticeList';
+import ProfilePanel from '../../components/ProfilePanel';
 import AuthPanel from '../../components/AuthPanel';
 import SyncStatus from '../../components/SyncStatus';
 import { getAuthState } from '../../lib/supabase';
 
-type View = 'loading' | 'save' | 'browse';
+type View = 'loading' | 'save' | 'browse' | 'profile';
 
 export default function App() {
   const [view, setView] = useState<View>('loading');
@@ -57,11 +58,27 @@ export default function App() {
     getAuthState().then(s => setAuthenticated(s.isAuthenticated));
   }
 
+  function handleShowProfile() {
+    setView('profile');
+  }
+
+  if (view === 'profile') {
+    return (
+      <div>
+        <ProfilePanel
+          onBack={() => setView('browse')}
+          onAuthChange={handleAuthChange}
+          onEntriesChanged={() => setSyncKey(k => k + 1)}
+        />
+      </div>
+    );
+  }
+
   if (view === 'loading') {
     return (
       <div>
         <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
-        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} onShowProfile={handleShowProfile} />
       </div>
     );
   }
@@ -75,7 +92,7 @@ export default function App() {
           onBrowse={() => setView('browse')}
         />
         <SyncStatus isAuthenticated={authenticated} />
-        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+        <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} onShowProfile={handleShowProfile} />
       </div>
     );
   }
@@ -84,7 +101,7 @@ export default function App() {
     <div>
         <PracticeList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} syncKey={syncKey} />
       <SyncStatus isAuthenticated={authenticated} />
-      <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
+      <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} onShowProfile={handleShowProfile} />
     </div>
   );
 }

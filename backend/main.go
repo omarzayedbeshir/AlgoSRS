@@ -25,6 +25,7 @@ func main() {
 	mux.Handle("GET /api/entries", middleware.Auth(http.HandlerFunc(handler.ListEntries)))
 	mux.Handle("POST /api/entries", middleware.Auth(http.HandlerFunc(handler.UpsertEntry)))
 	mux.Handle("DELETE /api/entries", middleware.Auth(http.HandlerFunc(handler.DeleteEntry)))
+	mux.Handle("DELETE /api/user/entries", middleware.Auth(http.HandlerFunc(handler.DeleteAllEntries)))
 	mux.Handle("POST /api/sync", middleware.Auth(http.HandlerFunc(handler.SyncEntries)))
 
 	port := os.Getenv("PORT")
