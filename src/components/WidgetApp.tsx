@@ -11,8 +11,8 @@ type View = 'loading' | 'save' | 'browse' | 'minimized';
 
 const T = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
 
-export default function WidgetApp() {
-  const [view, setView] = useState<View>('loading');
+export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boolean }) {
+  const [view, setView] = useState<View>(defaultMinimized ? 'minimized' : 'loading');
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [syncKey, setSyncKey] = useState(0);
@@ -25,13 +25,15 @@ export default function WidgetApp() {
         autoSync().then(() => setSyncKey(k => k + 1));
       }
     });
+    if (defaultMinimized) return;
     waitForProblemData().then(data => {
       if (data) { setProblem(data); setView('save'); return; }
       setView('browse');
     });
-  }, []);
+  }, [defaultMinimized]);
 
   useEffect(() => {
+    if (defaultMinimized) return;
     const poll = setInterval(() => {
       extractProblemData().then(data => {
         const currentUrl = window.location.href;
@@ -43,7 +45,23 @@ export default function WidgetApp() {
       });
     }, 2000);
     return () => clearInterval(poll);
-  }, []);
+  }, [defaultMinimized]);
+
+  // When started minimized on a non-problem page, still poll for navigation
+  // to a problem page so the badge click can open the save panel
+  useEffect(() => {
+    if (!defaultMinimized) return;
+    const poll = setInterval(() => {
+      extractProblemData().then(data => {
+        const currentUrl = window.location.href;
+        if (data && data.url !== prevUrlRef.current) {
+          prevUrlRef.current = data.url;
+          setProblem(data);
+        }
+      });
+    }, 2000);
+    return () => clearInterval(poll);
+  }, [defaultMinimized]);
 
   const detectProblem = () => {
     const title = extractTitle();
@@ -64,7 +82,7 @@ export default function WidgetApp() {
   }
 
   return (
-    <div style={{ margin: '16px', position: 'relative' }}>
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
       <div style={{
         width: '300px', maxHeight: '480px', borderRadius: '12px',
         background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',

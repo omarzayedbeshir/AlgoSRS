@@ -5,7 +5,7 @@ import WidgetApp from '../components/WidgetApp';
 import type { ProblemData, Difficulty } from '../types';
 
 export default defineContentScript({
-  matches: ['*://leetcode.com/problems/*'],
+  matches: ['*://leetcode.com/*'],
   main(ctx) {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message.type === 'GET_PROBLEM_DATA') {
@@ -14,6 +14,8 @@ export default defineContentScript({
       }
     });
 
+    const isProblemPage = !!window.location.href.match(/leetcode\.com\/problems\/[^/?#]+/);
+
     createShadowRootUi(ctx, {
       name: 'lc-fsrs',
       position: 'overlay',
@@ -21,13 +23,15 @@ export default defineContentScript({
       zIndex: 2147483647,
       onMount: (container) => {
         const root = createRoot(container);
-        root.render(<WidgetApp />);
+        root.render(<WidgetApp defaultMinimized={!isProblemPage} />);
         return root;
       },
       onRemove: (root) => {
         root?.unmount();
       },
-    }).then(ui => ui.mount());
+    }).then(ui => {
+      ui.mount();
+    });
   },
 });
 
