@@ -45,10 +45,13 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
     if (!dateStr) return 'Due now';
     const d = new Date(dateStr);
     const now = new Date();
-    const diff = Math.floor((d.getTime() - now.getTime()) / 86400000);
-    if (diff < 0) return `Overdue ${Math.abs(diff)}d`;
-    if (diff === 0) return 'Due today';
-    if (diff === 1) return 'Tomorrow';
+    const diffDays = (d.getTime() - now.getTime()) / 86400000;
+    if (diffDays < 0) {
+      if (diffDays > -1) return 'Due today';
+      return `Overdue ${Math.ceil(Math.abs(diffDays))}d`;
+    }
+    if (diffDays < 1) return 'Today';
+    if (diffDays < 2) return 'Tomorrow';
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 

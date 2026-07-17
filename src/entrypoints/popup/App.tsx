@@ -72,6 +72,7 @@ export default function App() {
         <SavePanel
           problem={problem}
           onSaved={() => setView('browse')}
+          onBrowse={() => setView('browse')}
         />
         <SyncStatus isAuthenticated={authenticated} />
         <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />

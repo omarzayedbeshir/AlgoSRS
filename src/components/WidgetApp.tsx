@@ -91,7 +91,7 @@ export default function WidgetApp() {
         {view === 'loading' ? (
           <div style={{ padding: '24px', textAlign: 'center', color: '#999', fontSize: '13px' }}>Loading...</div>
         ) : view === 'save' && problem ? (
-          <SavePanel key={problem.url} problem={problem} onSaved={() => setView('browse')} />
+          <SavePanel key={problem.url} problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
         ) : (
           <PracticeList onSaveNew={detectProblem} showNewButton isAuthenticated={authenticated} syncKey={syncKey} />
         )}

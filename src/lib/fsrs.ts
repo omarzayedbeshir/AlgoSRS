@@ -1,20 +1,7 @@
 import { fsrs, createEmptyCard, Rating as FsrsRating } from 'ts-fsrs';
 import type { LeetCodeEntry, Rating } from '../types';
 
-const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9 });
-
-export function initFsrsCard(): Pick<LeetCodeEntry, 'stability' | 'difficultyFsrs' | 'reps' | 'lapses' | 'fsrsState' | 'dueDate' | 'lastReviewAt'> {
-  const card = createEmptyCard(new Date());
-  return {
-    stability: card.stability,
-    difficultyFsrs: card.difficulty,
-    reps: card.reps,
-    lapses: card.lapses,
-    fsrsState: card.state,
-    dueDate: card.due.toISOString(),
-    lastReviewAt: undefined,
-  };
-}
+const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9, enable_short_term: false });
 
 export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
   updatedEntry: LeetCodeEntry;

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { ProblemData, Rating, LeetCodeEntry } from '../types';
 import { getAll, save } from '../storage';
 import { autoSync } from '../lib/sync';
-import { initFsrsCard } from '../lib/fsrs';
+import { reviewEntry } from '../lib/fsrs';
 
 const RATING_META: Record<Rating, { emoji: string; label: string }> = {
   1: { emoji: '😰', label: 'Very Hard' },
@@ -20,9 +20,10 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 interface Props {
   problem: ProblemData;
   onSaved: () => void;
+  onBrowse: () => void;
 }
 
-export default function SavePanel({ problem, onSaved }: Props) {
+export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
   const [rating, setRating] = useState<Rating | null>(null);
   const [savedEntry, setSavedEntry] = useState<LeetCodeEntry | null>(null);
   const [saving, setSaving] = useState(false);
@@ -45,15 +46,16 @@ export default function SavePanel({ problem, onSaved }: Props) {
   async function handleSave() {
     if (!rating) return;
     setSaving(true);
-    const entry: LeetCodeEntry = {
-      id: savedEntry?.id || crypto.randomUUID(),
-      title: problem.title,
-      url: problem.url,
-      difficulty: problem.difficulty,
-      rating,
-      date: new Date().toISOString(),
-      ...(!savedEntry ? initFsrsCard() : {}),
+    const id = savedEntry?.id || crypto.randomUUID();
+    const now = new Date();
+    const base: LeetCodeEntry = {
+      id, title: problem.title, url: problem.url,
+      difficulty: problem.difficulty, rating,
+      date: now.toISOString(),
     };
+    const entry = savedEntry
+      ? { ...savedEntry, ...base, date: now.toISOString() }
+      : reviewEntry(base, rating).updatedEntry;
     await save(entry);
     autoSync();
     setSaved(true);
@@ -69,6 +71,15 @@ export default function SavePanel({ problem, onSaved }: Props) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'
       }}>
         <h1 style={{ fontSize: '15px', fontWeight: 600, color: '#333' }}>Rate Problem</h1>
+        <button
+          onClick={onBrowse}
+          style={{
+            background: 'none', border: 'none', color: '#666', cursor: 'pointer',
+            fontSize: '12px', textDecoration: 'underline', padding: '2px 4px'
+          }}
+        >
+          Practice
+        </button>
       </div>
 
       <div style={{
