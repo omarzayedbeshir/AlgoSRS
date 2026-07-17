@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { save } from '../storage';
 import { reviewEntry, getRetrievability } from '../lib/fsrs';
-import { autoSync } from '../lib/sync';
+import { api } from '../lib/api-client';
 
 const GRADE_EMOJI: Record<Rating, { emoji: string; label: string }> = {
   1: { emoji: '😰', label: 'Again' },
@@ -37,7 +37,7 @@ export default function ReviewPanel({ entry, onComplete }: Props) {
     setBusy(true);
     const { updatedEntry } = reviewEntry(entry, grade);
     await save(updatedEntry);
-    autoSync();
+    try { await api.upsertEntry(updatedEntry); } catch (err) { console.error('review sync failed:', err); }
     onComplete();
   }
 
