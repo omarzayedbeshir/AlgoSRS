@@ -1,12 +1,19 @@
 CREATE TABLE IF NOT EXISTS leetcode_entries (
-    id         TEXT    NOT NULL PRIMARY KEY,
-    user_id    UUID   NOT NULL REFERENCES auth.users(id),
-    title      TEXT   NOT NULL,
-    url        TEXT   NOT NULL,
-    difficulty TEXT   NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
-    rating     SMALLINT NOT NULL CHECK (rating >= 1 AND rating <= 4),
-    date       TIMESTAMPTZ NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    id              TEXT            NOT NULL PRIMARY KEY,
+    user_id         UUID            NOT NULL REFERENCES auth.users(id),
+    title           TEXT            NOT NULL,
+    url             TEXT            NOT NULL,
+    difficulty      TEXT            NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    rating          SMALLINT        NOT NULL CHECK (rating >= 1 AND rating <= 4),
+    date            TIMESTAMPTZ     NOT NULL,
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    stability       DOUBLE PRECISION DEFAULT 0,
+    difficulty_fsrs DOUBLE PRECISION DEFAULT 0,
+    due_date        TIMESTAMPTZ,
+    reps            INTEGER         DEFAULT 0,
+    lapses          INTEGER         DEFAULT 0,
+    fsrs_state      INTEGER         DEFAULT 0,
+    last_review_at  TIMESTAMPTZ,
     UNIQUE(user_id, url)
 );
 

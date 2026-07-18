@@ -88,7 +88,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
 
   if (view === 'profile') {
     return (
-      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647, background: '#fff' }}>
         <div style={{
           width: '300px', maxHeight: '480px', borderRadius: '12px',
           background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
@@ -106,12 +106,14 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
   }
 
   return (
-      <div style={{ position: 'fixed', bottom: '16px', right: '16px' }}>
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647, background: '#fff' }}>
       <div style={{
-        width: '300px', maxHeight: '480px', borderRadius: '12px',
+        width: isMinimized ? 0 : '300px', maxHeight: isMinimized ? 0 : '480px',
+        borderRadius: '12px',
         background: '#fff', boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontSize: '14px', color: '#1a1a1a', overflowY: 'auto',
+        fontSize: '14px', color: '#1a1a1a',
+        overflow: isMinimized ? 'hidden' : 'auto',
         scrollbarWidth: 'thin', scrollbarColor: '#d0d0d0 transparent',
         transition: T,
         opacity: isMinimized ? 0 : 1,
