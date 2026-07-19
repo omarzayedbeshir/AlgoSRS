@@ -2,21 +2,18 @@
   color-scheme: light;
 }
 
-html {
-  background: #ffffff;
-  overflow: hidden;
-  border-radius: 14px;
-}
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  background: #ffffff;
+}
+
 body {
   width: 320px;
-  max-height: 480px;
   min-height: 200px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   font-size: 14px;
@@ -25,19 +22,6 @@ body {
   background: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(60,60,67,0.18);
-  border-radius: 3px;
 }
 
 button {

@@ -1,119 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import type { ProblemData } from '../../types';
-import SavePanel from '../../components/SavePanel';
-import PracticeList from '../../components/PracticeList';
-import ProfilePanel from '../../components/ProfilePanel';
-import AuthPanel from '../../components/AuthPanel';
-import SyncStatus from '../../components/SyncStatus';
-import { getAuthState } from '../../lib/supabase';
-import { colors, fontFamily } from '../../styles';
-
-type View = 'loading' | 'save' | 'browse' | 'profile';
+import { colors, fontFamily, button } from '../../styles';
 
 export default function App() {
-  const [view, setView] = useState<View>('loading');
-  const [problem, setProblem] = useState<ProblemData | null>(null);
+  const [tabChecked, setTabChecked] = useState(false);
   const [onLeetCode, setOnLeetCode] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
-  const [syncKey, setSyncKey] = useState(0);
 
   useEffect(() => {
-    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
-  }, []);
+    chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      const isProblem = !!tab?.url?.match(/leetcode\.com\/problems\/[^/?#]+/);
+      setOnLeetCode(isProblem);
+      setTabChecked(true);
 
-  useEffect(() => {
-    detectProblem();
-  }, []);
-
-  async function detectProblem() {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const tab = tabs[0];
-    if (!tab?.id || !tab.url) {
-      setView('browse');
-      return;
-    }
-
-    const match = tab.url.match(/leetcode\.com\/problems\/([^/?#]+)/);
-    if (!match || ['list', 'tag', 'solution', ''].includes(match[1])) {
-      setView('browse');
-      return;
-    }
-
-    setOnLeetCode(true);
-
-    try {
-      const response = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PROBLEM_DATA' });
-      if (response?.title) {
-        setProblem(response);
-        setView('save');
-        return;
+      if (isProblem && tab?.id) {
+        chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_WIDGET' }).catch(() => {});
+        window.close();
       }
-    } catch {
-      // content script not injected yet
-    }
+    });
+  }, []);
 
-    setView('browse');
+  if (!tabChecked) {
+    return (
+      <div style={{ width: 320, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily, fontSize: 14, color: colors.textSecondary, background: colors.bg }}>
+        Loading...
+      </div>
+    );
   }
 
-  function handleAuthChange() {
-    getAuthState().then(s => setAuthenticated(s.isAuthenticated));
-  }
-
-  function handleShowProfile() {
-    setView('profile');
-  }
-
-  const authPanel = (
-    <AuthPanel onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} onShowProfile={handleShowProfile} />
-  );
+  if (onLeetCode) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', maxHeight: 480, fontFamily, fontSize: 14, color: colors.text, background: colors.bg }}>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 16px', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.separator}`,
-        flexShrink: 0,
-      }}>
-        <span style={{ fontSize: 20, fontWeight: 700, color: colors.text }}>LC FSRS</span>
-        {authenticated && (
-          <button onClick={handleShowProfile} style={{
-            background: 'none', border: 'none', color: colors.accent, cursor: 'pointer',
-            fontSize: 13, fontWeight: 500, fontFamily, padding: 0,
-          }}>
-            Profile
-          </button>
-        )}
+    <div style={{ width: 320, minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32, fontFamily, fontSize: 14, color: colors.text, background: colors.bg, textAlign: 'center' }}>
+      <span style={{ fontSize: 40 }}>📝</span>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>Not on LeetCode</div>
+      <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5 }}>
+        Open a LeetCode problem to start reviewing with spaced repetition.
       </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {view === 'loading' && (
-          <div>
-            <div style={{ padding: '24px', textAlign: 'center', color: colors.textSecondary, fontSize: 13 }}>Loading...</div>
-            {authPanel}
-          </div>
-        )}
-
-        {view === 'save' && problem && (
-          <div>
-            <SavePanel problem={problem} onSaved={() => setView('browse')} onBrowse={() => setView('browse')} />
-            <SyncStatus isAuthenticated={authenticated} />
-            {authPanel}
-          </div>
-        )}
-
-        {view === 'browse' && (
-          <div>
-            <PracticeList onSaveNew={detectProblem} showNewButton={onLeetCode} isAuthenticated={authenticated} syncKey={syncKey} />
-            <SyncStatus isAuthenticated={authenticated} />
-            {authPanel}
-          </div>
-        )}
-
-        {view === 'profile' && (
-          <ProfilePanel onBack={() => setView('browse')} onAuthChange={handleAuthChange} onEntriesChanged={() => setSyncKey(k => k + 1)} />
-        )}
-      </div>
+      <a
+        href="https://leetcode.com/problemset"
+        target="_blank"
+        style={{ ...button('primary'), textDecoration: 'none', display: 'inline-block', marginTop: 8 }}
+      >
+        Go to LeetCode
+      </a>
     </div>
   );
 }

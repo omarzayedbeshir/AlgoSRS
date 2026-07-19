@@ -19,6 +19,22 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
   const [authenticated, setAuthenticated] = useState(false);
   const [syncKey, setSyncKey] = useState(0);
   const prevUrlRef = useRef('');
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const problemRef = useRef(problem);
+  problemRef.current = problem;
+
+  useEffect(() => {
+    const handler = (msg: any) => {
+      if (msg.type === 'TOGGLE_WIDGET') {
+        if (viewRef.current === 'minimized') {
+          setView(problemRef.current ? 'save' : 'browse');
+        }
+      }
+    };
+    chrome.runtime.onMessage.addListener(handler);
+    return () => chrome.runtime.onMessage.removeListener(handler);
+  }, []);
 
   useEffect(() => {
     getAuthState().then(s => {
