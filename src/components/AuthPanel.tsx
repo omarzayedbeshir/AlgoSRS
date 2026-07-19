@@ -166,13 +166,18 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     onEntriesChanged?.();
   }
 
-  function closeModal() {
+  async function closeModal() {
     setShowModal(false);
     setResetMode(false);
     setResetSent(false);
     setError('');
     setMessage('');
     setMode('login');
+    const state = await getAuthState();
+    if (state.isAuthenticated) {
+      setAuth(state);
+      onAuthChange();
+    }
   }
 
   function renderForm() {
@@ -282,7 +287,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
       {showModal && (
         <div
-          onClick={closeModal}
+          onClick={() => closeModal()}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2147483646,
             display: 'flex', alignItems: 'center', justifyContent: 'center',

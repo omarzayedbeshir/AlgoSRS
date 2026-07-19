@@ -10,12 +10,12 @@ type Entry struct {
 	Date           string   `json:"date"`
 	UpdatedAt      string   `json:"updated_at"`
 	Stability      float64  `json:"stability"`
-	DifficultyFsrs float64  `json:"difficulty_fsrs"`
-	DueDate        *string  `json:"due_date,omitempty"`
+	DifficultyFsrs float64  `json:"difficultyFsrs"`
+	DueDate        *string  `json:"dueDate,omitempty"`
 	Reps           int      `json:"reps"`
 	Lapses         int      `json:"lapses"`
-	FSRSState      int      `json:"fsrs_state"`
-	LastReviewAt   *string  `json:"last_review_at,omitempty"`
+	FSRSState      int      `json:"fsrsState"`
+	LastReviewAt   *string  `json:"lastReviewAt,omitempty"`
 }
 
 type SyncRequest struct {
