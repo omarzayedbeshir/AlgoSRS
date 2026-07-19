@@ -22,6 +22,13 @@ export default defineContentScript({
       alignment: 'bottom-right',
       zIndex: 2147483647,
       onMount: (container) => {
+        const style = document.createElement('style');
+        style.textContent = `
+          ::-webkit-scrollbar { width: 6px; }
+          ::-webkit-scrollbar-track { background: transparent; }
+          ::-webkit-scrollbar-thumb { background: rgba(60,60,67,0.18); border-radius: 3px; }
+        `;
+        container.prepend(style);
         const root = createRoot(container);
         root.render(<WidgetApp defaultMinimized={!isProblemPage} />);
         return root;

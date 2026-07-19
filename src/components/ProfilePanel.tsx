@@ -3,6 +3,7 @@ import { getAll, clearAll } from '../storage';
 import { getSupabase } from '../lib/supabase';
 import { api } from '../lib/api-client';
 import type { LeetCodeEntry } from '../types';
+import { colors, fontFamily, button, sectionHeader } from '../styles';
 
 interface Props {
   onBack: () => void;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 const RATING_EMOJI: Record<number, string> = { 1: '😰', 2: '😅', 3: '🙂', 4: '😎' };
+const RATING_COLORS: Record<number, string> = { 1: '#ff3b30', 2: '#ff9500', 3: '#34c759', 4: '#0071e3' };
 
 export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
@@ -76,159 +78,123 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
     setConfirmText('');
   }
 
-  const inputStyle: React.CSSProperties = {
-    padding: '6px 8px', borderRadius: '6px', border: '1px solid #d0d0d0',
-    fontSize: '12px', outline: 'none', width: '100%', boxSizing: 'border-box',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    padding: '6px 14px', borderRadius: '6px', border: 'none', fontSize: '12px',
-    cursor: 'pointer', fontWeight: 500, opacity: busy ? 0.7 : 1,
-  };
-
   return (
-    <div>
+    <div style={{ fontFamily }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '8px',
-        padding: '8px 14px', borderBottom: '1px solid #eee',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 16px', borderBottom: `1px solid ${colors.separator}`,
       }}>
-        <button onClick={onBack} style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: '#2563eb', fontSize: '13px', padding: 0,
-        }}>
-          ← Back
+        <button onClick={onBack} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', color: colors.accent, fontSize: 15, padding: 0, fontFamily, cursor: 'pointer' }}>
+          ‹ Back
         </button>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: '#333' }}>
-          Profile
-        </span>
+        <span style={{ flex: 1, textAlign: 'center', fontSize: 15, fontWeight: 600, color: colors.text }}>Profile</span>
+        <span style={{ flex: 1 }} />
       </div>
 
       {!confirmAction ? (
         <>
-          <div style={{ padding: '10px 14px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#333', marginBottom: '8px' }}>
-              📊 Your Stats
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '16px 16px 12px' }}>
+            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{total}</div>
+              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Problems</div>
             </div>
-            <div style={{
-              background: '#f5f6f8', borderRadius: '8px', padding: '10px',
-              fontSize: '12px', color: '#444', lineHeight: 1.8,
-            }}>
-              <div>Total problems: <strong>{total}</strong></div>
-              <div style={{ marginTop: '6px' }}>
-                {[1, 2, 3, 4].map(r => (
-                  <div key={r} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ minWidth: '60px' }}>{RATING_EMOJI[r]}</span>
-                    <div style={{
-                      flex: 1, height: '14px', background: '#e0e0e0', borderRadius: '7px',
-                      overflow: 'hidden', position: 'relative',
-                    }}>
-                      <div style={{
-                        width: total > 0 ? `${(ratingCounts[r] / total) * 100}%` : '0%',
-                        height: '100%', background: '#2563eb', borderRadius: '7px',
-                      }} />
-                    </div>
-                    <span style={{ minWidth: '24px', textAlign: 'right', color: '#666' }}>{ratingCounts[r]}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop: '6px' }}>
-                Average rating: <strong>{avgRatingPct}%</strong>
-              </div>
-              <div>
-                Average stability: <strong>{avgStability}</strong>
-              </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgRatingPct}%</div>
+              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Avg Rating</div>
+            </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgStability}</div>
+              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Stability</div>
+            </div>
+            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{entries.length}</div>
+              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Reviews</div>
             </div>
           </div>
 
-          <div style={{ padding: '0 14px 10px' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#333', marginBottom: '8px' }}>
-              ⚙️ Actions
+          <div style={{ padding: '0 16px 16px' }}>
+            <div style={{ background: colors.bg, borderRadius: 10, padding: 12 }}>
+              {[1, 2, 3, 4].map(r => (
+                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: r === 4 ? 0 : 6 }}>
+                  <span style={{ fontSize: 14, minWidth: 24 }}>{RATING_EMOJI[r]}</span>
+                  <div style={{ flex: 1, height: 8, background: colors.bgTertiary, borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{
+                      width: total > 0 ? `${(ratingCounts[r] / total) * 100}%` : '0%',
+                      height: '100%', background: RATING_COLORS[r], borderRadius: 4,
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 12, color: colors.textSecondary, minWidth: 20, textAlign: 'right' }}>{ratingCounts[r]}</span>
+                </div>
+              ))}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <button
-                onClick={() => setConfirmAction('reset')}
-                style={{
-                  ...btnStyle, background: '#f5f6f8', color: '#333',
-                  textAlign: 'left', border: '1px solid #e0e0e0',
-                }}
-              >
-                Reset all data
-              </button>
-              <button
-                onClick={() => setConfirmAction('delete')}
-                style={{
-                  ...btnStyle, background: '#fef2f2', color: '#dc2626',
-                  textAlign: 'left', border: '1px solid #fecaca',
-                }}
-              >
-                Delete account
-              </button>
+          </div>
+
+          <div style={{ padding: '0 16px 16px' }}>
+            <div style={{ background: colors.bg, borderRadius: 10, overflow: 'hidden' }}>
+              {[
+                { label: 'Reset all data', action: () => setConfirmAction('reset'), danger: false },
+                { label: 'Delete account', action: () => setConfirmAction('delete'), danger: true },
+              ].map((item, i, arr) => (
+                <button
+                  key={item.label}
+                  onClick={item.action}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '12px 14px', border: 'none', background: colors.bg,
+                    borderBottom: i < arr.length - 1 ? `1px solid ${colors.separator}` : 'none',
+                    fontFamily, fontSize: 14, color: item.danger ? colors.red : colors.text, cursor: 'pointer',
+                  }}
+                >
+                  {item.label}
+                  <span style={{ color: colors.textTertiary, fontSize: 16 }}>&gt;</span>
+                </button>
+              ))}
             </div>
           </div>
         </>
       ) : (
-        <div style={{ padding: '10px 14px' }}>
-          <div style={{
-            background: '#f5f6f8', borderRadius: '8px', padding: '10px',
-            fontSize: '12px', color: '#444',
-          }}>
+        <div style={{ padding: 16 }}>
+          <div style={{ background: colors.bgSecondary, borderRadius: 10, padding: 14 }}>
             {confirmAction === 'reset' ? (
               <>
-                <div style={{ fontWeight: 600, color: '#333', marginBottom: '4px' }}>
-                  Reset all data?
-                </div>
-                <div style={{ lineHeight: 1.4, marginBottom: '8px' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: colors.text, marginBottom: 6 }}>Reset all data?</div>
+                <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, marginBottom: 10 }}>
                   This will permanently delete all your saved problems and review history.
                 </div>
               </>
             ) : (
               <>
-                <div style={{ fontWeight: 600, color: '#dc2626', marginBottom: '4px' }}>
-                  Delete account?
-                </div>
-                <div style={{ lineHeight: 1.4, marginBottom: '8px' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: colors.red, marginBottom: 6 }}>Delete account?</div>
+                <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, marginBottom: 10 }}>
                   This will permanently delete all your data and your account. This cannot be undone.
                 </div>
               </>
             )}
-            <div style={{ fontSize: '11px', color: '#666', marginBottom: '6px' }}>
-              Type <strong>DELETE</strong> to confirm:
+            <div style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+              Type <strong style={{ color: colors.text }}>DELETE</strong> to confirm:
             </div>
             <input
-              type="text"
-              value={confirmText}
+              type="text" value={confirmText}
               onChange={e => setConfirmText(e.target.value)}
               placeholder="DELETE"
-              style={inputStyle}
+              style={{
+                fontFamily, fontSize: 14, padding: '10px 12px', borderRadius: 8, border: 'none',
+                background: colors.bg, color: colors.text, outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
             />
-            {busy && (
-              <div style={{ fontSize: '11px', color: '#666', marginTop: '6px' }}>
-                Working...
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            {busy && <div style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>Working...</div>}
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
               <button
                 onClick={confirmAction === 'reset' ? handleReset : handleDeleteAccount}
                 disabled={confirmText !== 'DELETE' || busy}
                 style={{
-                  ...btnStyle,
-                  background: confirmAction === 'delete' ? '#dc2626' : '#2563eb',
-                  color: '#fff',
-                  opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
-                  cursor: confirmText !== 'DELETE' || busy ? 'default' : 'pointer',
+                  ...button(confirmAction === 'delete' ? 'danger' : 'primary'),
+                  flex: 1, opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
                 }}
               >
                 {confirmAction === 'reset' ? 'Reset' : 'Delete'}
               </button>
-              <button
-                onClick={cancelConfirm}
-                disabled={busy}
-                style={{
-                  ...btnStyle, background: '#e0e0e0', color: '#666',
-                  opacity: busy ? 0.5 : 1,
-                  cursor: busy ? 'default' : 'pointer',
-                }}
-              >
+              <button onClick={cancelConfirm} disabled={busy} style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}>
                 Cancel
               </button>
             </div>

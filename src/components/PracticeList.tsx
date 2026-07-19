@@ -2,15 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
 import { api } from '../lib/api-client';
+import { colors, fontFamily, difficultyDot, sectionHeader, emptyState } from '../styles';
 
 const RATING_EMOJI: Record<Rating, string> = {
   1: '😰', 2: '😅', 3: '🙂', 4: '😎',
-};
-
-const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: '#00b8a3',
-  medium: '#ffc01e',
-  hard: '#ff375f',
 };
 
 interface Props {
@@ -42,13 +37,13 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
   }
 
   function formatDueDate(dateStr: string | undefined): string {
-    if (!dateStr) return 'Due now';
+    if (!dateStr) return 'Now';
     const d = new Date(dateStr);
     const now = new Date();
     const diffDays = (d.getTime() - now.getTime()) / 86400000;
     if (diffDays < 0) {
-      if (diffDays > -1) return 'Due today';
-      return `Overdue ${Math.ceil(Math.abs(diffDays))}d`;
+      if (diffDays > -1) return 'Today';
+      return `${Math.ceil(Math.abs(diffDays))}d`;
     }
     if (diffDays < 1) return 'Today';
     if (diffDays < 2) return 'Tomorrow';
@@ -71,56 +66,55 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
     return da - db;
   });
 
+  const totalCount = dueEntries.length + upcomingEntries.length;
+
   return (
-    <div style={{ padding: '16px', minHeight: '300px' }}>
+    <div style={{ fontFamily, paddingBottom: 8 }}>
       <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px'
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '14px 16px 8px',
       }}>
-        <h1 style={{ fontSize: '15px', fontWeight: 600, color: '#333' }}>
-          Practice ({dueEntries.length + upcomingEntries.length})
-        </h1>
-        {showNewButton && (
-          <button
-            onClick={onSaveNew}
-            style={{
-              background: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px',
-              padding: '4px 12px', fontSize: '12px', cursor: 'pointer',
-              fontWeight: 500,
-            }}
-          >
-            + New
-          </button>
-        )}
+        <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>Practice</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, color: colors.textSecondary }}>{totalCount}</span>
+          {showNewButton && (
+            <button
+              onClick={onSaveNew}
+              style={{
+                width: 28, height: 28, borderRadius: '50%', border: 'none',
+                background: colors.accent, color: colors.bg, fontSize: 18, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily, fontWeight: 400,
+              }}
+            >
+              +
+            </button>
+          )}
+        </div>
       </div>
 
       {entries.length === 0 ? (
-        <div style={{
-          textAlign: 'center', color: '#aaa', marginTop: '60px', fontSize: '13px'
-        }}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
+        <div style={emptyState}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>📝</div>
           No saved problems yet.<br />
           Open a LeetCode problem to rate it.
         </div>
       ) : (
         <>
           {dueEntries.length > 0 && (
-            <div style={{ marginBottom: '14px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#e53e3e', marginBottom: '6px' }}>
-                Due Now
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {dueEntries.map(entry => renderEntry(entry))}
+            <div style={{ marginBottom: 4 }}>
+              <div style={sectionHeader}>Due Now</div>
+              <div style={{ background: colors.bg }}>
+                {dueEntries.map((entry, i) => renderEntry(entry, i === 0, i === dueEntries.length - 1))}
               </div>
             </div>
           )}
 
           {upcomingEntries.length > 0 && (
             <div>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: '#888', marginBottom: '6px' }}>
-                Upcoming
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {upcomingEntries.map(entry => renderEntry(entry))}
+              <div style={sectionHeader}>Upcoming</div>
+              <div style={{ background: colors.bg }}>
+                {upcomingEntries.map((entry, i) => renderEntry(entry, i === 0, i === upcomingEntries.length - 1))}
               </div>
             </div>
           )}
@@ -129,47 +123,45 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
     </div>
   );
 
-  function renderEntry(entry: LeetCodeEntry) {
-    const diffColor = DIFFICULTY_COLORS[entry.difficulty] || '#888';
+  function renderEntry(entry: LeetCodeEntry, first: boolean, last: boolean) {
     return (
-      <div
+      <a
         key={entry.id}
+        href={entry.url}
+        target="_blank"
         style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          padding: '8px 10px', borderRadius: '6px',
-          background: '#f5f6f8',
-          borderLeft: `4px solid ${diffColor}`,
-          fontSize: '13px',
+          display: 'block', textDecoration: 'none', color: 'inherit',
+          borderTopLeftRadius: first ? 10 : 0,
+          borderTopRightRadius: first ? 10 : 0,
+          borderBottomLeftRadius: last ? 10 : 0,
+          borderBottomRightRadius: last ? 10 : 0,
+          overflow: 'hidden',
         }}
       >
-        <a
-          href={entry.url}
-          target="_blank"
-          title={entry.title}
-          style={{
-            flex: 1, color: '#1a1a1a', textDecoration: 'none',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}
-        >
-          {entry.title}
-        </a>
-        <span style={{ fontSize: '15px', lineHeight: 1 }} title={entry.difficulty}>
-          {RATING_EMOJI[entry.rating]}
-        </span>
-        <span style={{ fontSize: '11px', color: '#999', whiteSpace: 'nowrap' }}>
-          {formatDueDate(entry.dueDate)}
-        </span>
-        <button
-          onClick={() => handleDelete(entry.id)}
-          title="Delete"
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer', color: '#ccc',
-            fontSize: '14px', padding: '0 2px', lineHeight: 1,
-          }}
-        >
-          ✕
-        </button>
-      </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '11px 16px', background: colors.bg, fontSize: 14,
+          borderBottom: last ? 'none' : `1px solid ${colors.separator}`,
+        }}>
+          <span style={difficultyDot(entry.difficulty)} />
+          <span style={{ flex: 1, fontWeight: 400, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {entry.title}
+          </span>
+          <span style={{ fontSize: 14, lineHeight: 1 }}>{RATING_EMOJI[entry.rating]}</span>
+          <span style={{ fontSize: 12, color: colors.textSecondary, whiteSpace: 'nowrap', minWidth: 40, textAlign: 'right' }}>
+            {formatDueDate(entry.dueDate)}
+          </span>
+          <button
+            onClick={e => { e.preventDefault(); handleDelete(entry.id); }}
+            style={{
+              background: 'none', border: 'none', color: colors.textTertiary,
+              fontSize: 14, padding: 0, lineHeight: 1, fontFamily,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      </a>
     );
   }
 }
