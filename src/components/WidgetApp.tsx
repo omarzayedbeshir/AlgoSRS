@@ -26,6 +26,14 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
   problemRef.current = problem;
 
   useEffect(() => {
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setView('minimized');
+    };
+    window.addEventListener('keydown', escHandler);
+    return () => window.removeEventListener('keydown', escHandler);
+  }, []);
+
+  useEffect(() => {
     const handler = (msg: any) => {
       if (msg.type === 'TOGGLE_WIDGET') {
         if (viewRef.current === 'minimized') {
