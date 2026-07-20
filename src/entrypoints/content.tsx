@@ -9,7 +9,9 @@ export default defineContentScript({
   main(ctx) {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message.type === 'GET_PROBLEM_DATA') {
-        waitForProblemData().then(sendResponse).catch(() => sendResponse(null));
+        waitForProblemData()
+          .then(sendResponse)
+          .catch(() => sendResponse(null));
         return true;
       }
     });
@@ -36,7 +38,7 @@ export default defineContentScript({
       onRemove: (root) => {
         root?.unmount();
       },
-    }).then(ui => {
+    }).then((ui) => {
       ui.mount();
     });
   },

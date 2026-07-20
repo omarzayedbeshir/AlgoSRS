@@ -24,17 +24,16 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const timerRef = useRef<number>();
-  const urlRef = useRef(problem.url);
-  urlRef.current = problem.url;
 
   useEffect(() => {
+    const currentUrl = problem.url;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRating(null);
     setSavedEntry(null);
     setSaving(false);
     setSaved(false);
-    getAll().then(entries => {
-      if (urlRef.current !== problem.url) return;
-      const existing = entries.find(e => e.url === problem.url);
+    getAll().then((entries) => {
+      const existing = entries.find((e) => e.url === currentUrl);
       if (existing) {
         setSavedEntry(existing);
         setRating(existing.rating);
@@ -50,14 +49,26 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
     const id = savedEntry?.id || crypto.randomUUID();
     const now = new Date();
     const base: LeetCodeEntry = {
-      id, title: problem.title, url: problem.url,
-      difficulty: problem.difficulty, tags: problem.tags, rating,
+      id,
+      title: problem.title,
+      url: problem.url,
+      difficulty: problem.difficulty,
+      tags: problem.tags,
+      rating,
       date: now.toISOString(),
       updatedAt: now.toISOString(),
     };
-    const entry = { ...reviewEntry(savedEntry ?? base, rating).updatedEntry, rating, date: now.toISOString() };
+    const entry = {
+      ...reviewEntry(savedEntry ?? base, rating).updatedEntry,
+      rating,
+      date: now.toISOString(),
+    };
     await save(entry);
-    try { await api.upsertEntry(entry); } catch {}
+    try {
+      await api.upsertEntry(entry);
+    } catch (err) {
+      console.error('upsertEntry:', err);
+    }
     setSaved(true);
     setSaving(false);
     timerRef.current = window.setTimeout(onSaved, 800);
@@ -67,37 +78,72 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
 
   return (
     <div style={{ padding: 16, fontFamily }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 16,
+        }}
+      >
         <span style={{ fontSize: 13, fontWeight: 600, color: colors.textSecondary }}>Rate</span>
-        <button onClick={onBrowse} style={button('plain')}>Practice</button>
+        <button onClick={onBrowse} style={button('plain')}>
+          Practice
+        </button>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <span style={{ width: 10, height: 10, borderRadius: '50%', background: diffColor, flexShrink: 0 }} />
-        <div style={{ fontSize: 15, fontWeight: 500, color: colors.text, lineHeight: 1.3 }}>{problem.title}</div>
+        <span
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: diffColor,
+            flexShrink: 0,
+          }}
+        />
+        <div style={{ fontSize: 15, fontWeight: 500, color: colors.text, lineHeight: 1.3 }}>
+          {problem.title}
+        </div>
       </div>
 
-      <div style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 14, textAlign: 'center' }}>
+      <div
+        style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 14, textAlign: 'center' }}
+      >
         How was it for you?
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-        {([1, 2, 3, 4] as Rating[]).map(r => {
+        {([1, 2, 3, 4] as Rating[]).map((r) => {
           const selected = rating === r;
           return (
             <button
               key={r}
               onClick={() => setRating(r)}
               style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '14px 8px', borderRadius: 12, border: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                padding: '14px 8px',
+                borderRadius: 12,
+                border: 'none',
                 background: selected ? colors.accentLight : colors.bgSecondary,
-                cursor: 'pointer', fontFamily, transition: 'all 0.12s', outline: 'none',
+                cursor: 'pointer',
+                fontFamily,
+                transition: 'all 0.12s',
+                outline: 'none',
                 opacity: rating !== null && !selected ? 0.5 : 1,
               }}
             >
               <span style={{ fontSize: 28, lineHeight: 1 }}>{RATING_META[r].emoji}</span>
-              <span style={{ fontSize: 11, fontWeight: 500, color: selected ? colors.accent : colors.textSecondary }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: selected ? colors.accent : colors.textSecondary,
+                }}
+              >
                 {RATING_META[r].label}
               </span>
             </button>
@@ -109,10 +155,18 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
         onClick={handleSave}
         disabled={!rating || saving}
         style={{
-          fontFamily, width: '100%', padding: '13px 0', borderRadius: 12, border: 'none',
-          fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'opacity 0.15s',
+          fontFamily,
+          width: '100%',
+          padding: '13px 0',
+          borderRadius: 12,
+          border: 'none',
+          fontSize: 15,
+          fontWeight: 600,
+          cursor: 'pointer',
+          transition: 'opacity 0.15s',
           background: rating ? colors.accent : colors.bgTertiary,
-          color: colors.bg, opacity: saving ? 0.6 : 1,
+          color: colors.bg,
+          opacity: saving ? 0.6 : 1,
           boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
         }}
       >

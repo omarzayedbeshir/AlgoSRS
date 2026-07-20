@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -11,8 +11,13 @@ import (
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
+
 	if err := db.Connect(); err != nil {
-		log.Fatalf("database connection failed: %v", err)
+		slog.Error("database connection failed", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -34,7 +39,9 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, middleware.CORS(mux)))
+	slog.Info("listening", "port", port)
+	if err := http.ListenAndServe(":"+port, middleware.CORS(mux)); err != nil {
+		slog.Error("server exited", "error", err)
+		os.Exit(1)
+	}
 }
-

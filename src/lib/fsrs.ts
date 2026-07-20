@@ -1,9 +1,13 @@
-import { fsrs, createEmptyCard, Rating as FsrsRating, Grade } from 'ts-fsrs';
+import { fsrs, createEmptyCard, Rating as FsrsRating } from 'ts-fsrs';
+import type { Grade } from 'ts-fsrs';
 import type { LeetCodeEntry, Rating } from '../types';
 
 const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9, enable_short_term: false });
 
-export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
+export function reviewEntry(
+  entry: LeetCodeEntry,
+  grade: Rating,
+): {
   updatedEntry: LeetCodeEntry;
   scheduledDays: number;
 } {
@@ -27,13 +31,15 @@ export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
 }
 
 function cardFromEntry(entry: LeetCodeEntry) {
-  const card = createEmptyCard(entry.lastReviewAt ? new Date(entry.lastReviewAt) : new Date(entry.date));
+  const card = createEmptyCard(
+    entry.lastReviewAt ? new Date(entry.lastReviewAt) : new Date(entry.date),
+  );
   if (entry.fsrsState !== undefined && entry.fsrsState !== 0) {
     card.stability = entry.stability ?? card.stability;
     card.difficulty = entry.difficultyFsrs ?? card.difficulty;
     card.reps = entry.reps ?? 0;
     card.lapses = entry.lapses ?? 0;
-    card.state = entry.fsrsState as any;
+    card.state = entry.fsrsState as number;
     if (entry.dueDate) card.due = new Date(entry.dueDate);
     if (entry.lastReviewAt) card.last_review = new Date(entry.lastReviewAt);
   } else if (entry.dueDate) {

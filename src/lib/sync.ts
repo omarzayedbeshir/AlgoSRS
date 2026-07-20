@@ -35,7 +35,7 @@ export async function syncAll(): Promise<void> {
     await localSave(toSave);
   }
 
-  await markSynced([...merged.values()].map(e => e.id));
+  await markSynced([...merged.values()].map((e) => e.id));
 }
 
 export async function autoSync(): Promise<void> {
@@ -46,7 +46,8 @@ export async function autoSync(): Promise<void> {
   _syncing = true;
   try {
     await syncAll();
-  } catch {
+  } catch (err) {
+    console.error('autoSync failed:', err);
   } finally {
     _syncing = false;
   }

@@ -1,5 +1,10 @@
 # LC FSRS
 
+[![CI](https://github.com/omarzayedbeshir/lc-fsrs/actions/workflows/ci.yml/badge.svg)](https://github.com/omarzayedbeshir/lc-fsrs/actions/workflows/ci.yml)
+[![Go 1.22](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go)](https://go.dev)
+[![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A Chrome extension that uses the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) spaced-repetition algorithm — the same scheduler powering Anki — to help LeetCode users systematically review and retain problem-solving skills. Save problems with a rating, review on an FSRS-optimized schedule, and sync across devices.
 
 **Stack**: WXT / React 18 / Go 1.22 + stdlib / PostgreSQL (pgx v5) / Supabase Auth / ts-fsrs v5 / Railway
@@ -44,18 +49,55 @@ backend/
 ├── handler/entries.go    # All request handlers + password reset HTML page
 ├── middleware/            # JWT auth, CORS, JWKS cache
 ├── db/postgres.go        # pgx connection pool
-├── models/entry.go       # Entry, SyncRequest, SyncResponse
-└── migrations/           # 001_create_entries.sql
+├── db/schema.sql         # DDL
+└── models/entry.go       # Entry, SyncRequest, SyncResponse
 ```
+
+## Demo
+
+<!-- TODO: Add screenshot of the widget in action on LeetCode
+
+![Widget on LeetCode](screenshots/widget-save.png)
+
+<details>
+<summary>More screenshots</summary>
+
+![Practice list](screenshots/widget-practice.png)
+
+![Statistics dashboard](screenshots/widget-stats.png)
+
+</details>
+-->
 
 ## Getting Started
 
 ```bash
 npm install && npx wxt prepare
 cp .env.example .env && cp backend/.env.example backend/.env
-# Run backend/migrations/001_create_entries.sql on your Postgres instance
+
+# Start Postgres and run schema
+docker compose up -d db
+
+# Start the backend
 cd backend && go run .        # Backend on :8080
+
+# Start the extension dev server (in another terminal)
 cd .. && npm run dev           # Chrome with extension loaded
+```
+
+## Testing
+
+```bash
+# Frontend unit tests
+npm test
+
+# Backend tests (requires DATABASE_URL for integration tests)
+cd backend && go test ./...
+
+# Lint
+npm run lint
+npm run format:check
+cd backend && golangci-lint run
 ```
 
 ## API
@@ -78,3 +120,13 @@ railway up                    # Backend (Dockerfile-based)
 npm run build                 # Extension → output/chrome-mv3/
 # Load unpacked from chrome://extensions
 ```
+
+## Chrome Web Store (planned)
+
+**Extension name:** LC FSRS — Spaced Repetition for LeetCode
+
+**Short description:** Save LeetCode problems with FSRS ratings and review on an optimized schedule. Syncs across devices.
+
+**Category:** Productivity / Developer Tools
+
+**Screenshots:** See [`screenshots/`](screenshots/placeholder.md) for the planned capture list.

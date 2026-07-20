@@ -38,7 +38,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       setPendingMerge(true);
       return;
     }
-    try { await autoSync(); } catch {}
+    try {
+      await autoSync();
+    } catch (err) {
+      console.error('autoSync on auth change:', err);
+    }
     const state = await getAuthState();
     setAuth(state);
     setShowModal(false);
@@ -63,10 +67,13 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       const { data, error: err } = await sb.auth.signUp({ email, password });
       setLoading(false);
 
-      if (err) { setError(err.message); return; }
+      if (err) {
+        setError(err.message);
+        return;
+      }
 
       if (!data.session) {
-        setMessage("Account created! Check your email (and spam) to confirm.");
+        setMessage('Account created! Check your email (and spam) to confirm.');
         setMode('login');
         return;
       }
@@ -99,7 +106,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     setLoggingOut(true);
     const sb = getSupabase();
     if (sb) {
-      try { await autoSync(); } catch {}
+      try {
+        await autoSync();
+      } catch (err) {
+        console.error('logout autoSync:', err);
+      }
     }
     await clearAll();
     await sb?.auth.signOut();
@@ -138,7 +149,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   async function handleReplace() {
     setMergeBusy(true);
     await clearAll();
-    try { await syncAll(); } catch {}
+    try {
+      await syncAll();
+    } catch (err) {
+      console.error('replace syncAll:', err);
+    }
     setPendingMerge(false);
     setMergeBusy(false);
     const state = await getAuthState();
@@ -166,15 +181,46 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     if (pendingMerge) {
       return (
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: colors.text, marginBottom: 8 }}>Local entries found</div>
-          <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, marginBottom: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: colors.text, marginBottom: 8 }}>
+            Local entries found
+          </div>
+          <div
+            style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, marginBottom: 12 }}
+          >
             You have saved entries locally. What would you like to do with them?
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={handleReplace} disabled={mergeBusy} style={{ ...button('primary'), fontSize: 13, padding: '8px 16px', opacity: mergeBusy ? 0.6 : 1 }}>
+            <button
+              onClick={handleReplace}
+              disabled={mergeBusy}
+              style={{
+                ...button('primary'),
+                fontSize: 13,
+                padding: '8px 16px',
+                opacity: mergeBusy ? 0.6 : 1,
+              }}
+            >
               {mergeBusy ? 'Working...' : 'Replace with cloud'}
             </button>
-            <button onClick={async () => { try { await autoSync(); } catch {}; onEntriesChanged?.(); setPendingMerge(false); closeModal(); }} disabled={mergeBusy} style={{ ...button('secondary'), fontSize: 13, padding: '8px 16px', opacity: mergeBusy ? 0.5 : 1 }}>
+            <button
+              onClick={async () => {
+                try {
+                  await autoSync();
+                } catch (err) {
+                  console.error('merge autoSync:', err);
+                }
+                onEntriesChanged?.();
+                setPendingMerge(false);
+                closeModal();
+              }}
+              disabled={mergeBusy}
+              style={{
+                ...button('secondary'),
+                fontSize: 13,
+                padding: '8px 16px',
+                opacity: mergeBusy ? 0.5 : 1,
+              }}
+            >
               Merge
             </button>
           </div>
@@ -184,26 +230,67 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
     if (resetMode) {
       return (
-        <form onSubmit={handleSendReset} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form
+          onSubmit={handleSendReset}
+          style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+        >
           {resetSent ? (
             <>
-              <div style={{ fontSize: 15, fontWeight: 600, color: colors.text, marginBottom: 4 }}>Check your email</div>
-              <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5, marginBottom: 8 }}>
-                We've sent a password reset link to <strong style={{ color: colors.text }}>{email}</strong>. Check spam if you don't see it.
+              <div style={{ fontSize: 15, fontWeight: 600, color: colors.text, marginBottom: 4 }}>
+                Check your email
               </div>
-              <button type="button" onClick={() => { setResetMode(false); setResetSent(false); }} style={{ ...button('plain'), alignSelf: 'flex-start' }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: colors.textSecondary,
+                  lineHeight: 1.5,
+                  marginBottom: 8,
+                }}
+              >
+                We've sent a password reset link to{' '}
+                <strong style={{ color: colors.text }}>{email}</strong>. Check spam if you don't see
+                it.
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetMode(false);
+                  setResetSent(false);
+                }}
+                style={{ ...button('plain'), alignSelf: 'flex-start' }}
+              >
                 Back to login
               </button>
             </>
           ) : (
             <>
-              <div style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 4 }}>Enter your email to receive a password reset link.</div>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required style={inputStyle} />
+              <div style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 4 }}>
+                Enter your email to receive a password reset link.
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                required
+                style={inputStyle}
+              />
               {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
-              <button type="submit" disabled={loading} style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}
+              >
                 {loading ? 'Sending...' : 'Send reset link'}
               </button>
-              <button type="button" onClick={() => { setResetMode(false); setError(''); }} style={{ ...button('plain'), alignSelf: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetMode(false);
+                  setError('');
+                }}
+                style={{ ...button('plain'), alignSelf: 'center' }}
+              >
                 Back to login
               </button>
             </>
@@ -214,14 +301,32 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
     return (
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ display: 'flex', background: colors.bgSecondary, borderRadius: 10, padding: 2, marginBottom: 4 }}>
-          {(['login', 'signup'] as const).map(m => (
+        <div
+          style={{
+            display: 'flex',
+            background: colors.bgSecondary,
+            borderRadius: 10,
+            padding: 2,
+            marginBottom: 4,
+          }}
+        >
+          {(['login', 'signup'] as const).map((m) => (
             <button
-              key={m} type="button" onClick={() => setMode(m)}
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
               style={{
-                flex: 1, padding: '6px 0', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 500,
-                background: mode === m ? colors.bg : 'transparent', color: mode === m ? colors.text : colors.textSecondary,
-                fontFamily, cursor: 'pointer', transition: 'all 0.15s',
+                flex: 1,
+                padding: '6px 0',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 500,
+                background: mode === m ? colors.bg : 'transparent',
+                color: mode === m ? colors.text : colors.textSecondary,
+                fontFamily,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
               }}
             >
               {m === 'login' ? 'Sign In' : 'Sign Up'}
@@ -229,18 +334,41 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           ))}
         </div>
 
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required style={inputStyle} />
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required minLength={6} style={inputStyle} />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+          style={inputStyle}
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          required
+          minLength={6}
+          style={inputStyle}
+        />
 
         {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
         {message && <div style={{ fontSize: 12, color: colors.green }}>{message}</div>}
 
-        <button type="submit" disabled={loading} style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}
+        >
           {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
         </button>
 
         {mode === 'login' && (
-          <button type="button" onClick={() => setResetMode(true)} style={{ ...button('plain'), alignSelf: 'center', fontSize: 12 }}>
+          <button
+            type="button"
+            onClick={() => setResetMode(true)}
+            style={{ ...button('plain'), alignSelf: 'center', fontSize: 12 }}
+          >
             Forgot password?
           </button>
         )}
@@ -250,14 +378,34 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
   if (auth.isAuthenticated) {
     return (
-      <div style={{ display: 'flex', gap: 8, padding: '6px 16px 10px', borderTop: `1px solid ${colors.separator}`, alignItems: 'center' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          padding: '6px 16px 10px',
+          borderTop: `1px solid ${colors.separator}`,
+          alignItems: 'center',
+        }}
+      >
         {onShowProfile && (
-          <button onClick={onShowProfile} disabled={loggingOut} style={{ ...button('plain'), opacity: loggingOut ? 0.5 : 1 }}>Profile</button>
+          <button
+            onClick={onShowProfile}
+            disabled={loggingOut}
+            style={{ ...button('plain'), opacity: loggingOut ? 0.5 : 1 }}
+          >
+            Profile
+          </button>
         )}
         {loggingOut ? (
-          <span style={{ fontSize: 13, color: colors.textSecondary, fontFamily, padding: '4px 8px' }}>Signing out…</span>
+          <span
+            style={{ fontSize: 13, color: colors.textSecondary, fontFamily, padding: '4px 8px' }}
+          >
+            Signing out…
+          </span>
         ) : (
-          <button onClick={handleLogout} style={{ ...button('plain'), color: colors.red }}>Log out</button>
+          <button onClick={handleLogout} style={{ ...button('plain'), color: colors.red }}>
+            Log out
+          </button>
         )}
       </div>
     );
@@ -265,7 +413,21 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
   return (
     <>
-      <div onClick={() => setShowModal(true)} style={{ display: 'flex', justifyContent: 'center', padding: '11px 16px', borderTop: `1px solid ${colors.separator}`, cursor: 'pointer', fontFamily, fontSize: 14, fontWeight: 500, color: colors.accent, userSelect: 'none' }}>
+      <div
+        onClick={() => setShowModal(true)}
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: '11px 16px',
+          borderTop: `1px solid ${colors.separator}`,
+          cursor: 'pointer',
+          fontFamily,
+          fontSize: 14,
+          fontWeight: 500,
+          color: colors.accent,
+          userSelect: 'none',
+        }}
+      >
         Sign in
       </div>
 
@@ -273,27 +435,46 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
         <div
           onClick={() => closeModal()}
           style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2147483646,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2147483646,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             background: 'rgba(0,0,0,0.3)',
-            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
           }}
         >
           <div
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             style={{
-              width: 280, background: colors.bg, borderRadius: 14, padding: 20,
+              width: 280,
+              background: colors.bg,
+              borderRadius: 14,
+              padding: 20,
               boxShadow: '0 16px 48px rgba(0,0,0,0.2)',
               fontFamily,
             }}
           >
-            <div style={{
-              width: 36, height: 4, background: colors.bgTertiary, borderRadius: 2,
-              margin: '0 auto 16px',
-            }} />
+            <div
+              style={{
+                width: 36,
+                height: 4,
+                background: colors.bgTertiary,
+                borderRadius: 2,
+                margin: '0 auto 16px',
+              }}
+            />
             {renderForm()}
             <div style={{ textAlign: 'center', marginTop: 12 }}>
-              <button onClick={closeModal} style={{ ...button('plain'), color: colors.textSecondary, fontSize: 13 }}>
+              <button
+                onClick={closeModal}
+                style={{ ...button('plain'), color: colors.textSecondary, fontSize: 13 }}
+              >
                 Cancel
               </button>
             </div>

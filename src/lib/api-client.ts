@@ -55,11 +55,9 @@ export const api = {
       method: 'DELETE',
     }),
 
-  deleteAllEntries: () =>
-    request('/api/user/entries', { method: 'DELETE' }),
+  deleteAllEntries: () => request('/api/user/entries', { method: 'DELETE' }),
 
-  deleteUser: () =>
-    request('/api/user', { method: 'DELETE' }),
+  deleteUser: () => request('/api/user', { method: 'DELETE' }),
 
   sync: (entries: LeetCodeEntry[], deletedIds: string[]) =>
     request('/api/sync', {

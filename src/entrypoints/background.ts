@@ -16,7 +16,10 @@ export default defineBackground({
       const sb = getSupabase();
       switch (message.type) {
         case 'AUTH_SIGNUP':
-          if (!sb) { sendResponse({ error: 'Supabase not configured' }); return; }
+          if (!sb) {
+            sendResponse({ error: 'Supabase not configured' });
+            return;
+          }
           sb.auth
             .signUp({ email: message.payload.email, password: message.payload.password })
             .then(({ data, error }) => {
@@ -26,9 +29,15 @@ export default defineBackground({
           return true;
 
         case 'AUTH_LOGIN':
-          if (!sb) { sendResponse({ error: 'Supabase not configured' }); return; }
+          if (!sb) {
+            sendResponse({ error: 'Supabase not configured' });
+            return;
+          }
           sb.auth
-            .signInWithPassword({ email: message.payload.email, password: message.payload.password })
+            .signInWithPassword({
+              email: message.payload.email,
+              password: message.payload.password,
+            })
             .then(({ data, error }) => {
               if (error) sendResponse({ error: error.message });
               else sendResponse({ session: data.session, user: data.user });
@@ -48,7 +57,7 @@ export default defineBackground({
         case 'SYNC_NOW':
           syncAll()
             .then(() => sendResponse({ ok: true }))
-            .catch(err => sendResponse({ error: err.message }));
+            .catch((err) => sendResponse({ error: err.message }));
           return true;
       }
     });

@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -176,7 +176,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 		`SELECT `+cols+` FROM leetcode_entries WHERE user_id = $1
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
-		log.Printf("list entries query: %v", err)
+		slog.Error("list entries query failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -186,7 +186,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var e models.Entry
 		if err := scanEntry(&e, rows); err != nil {
-			log.Printf("list entries scan: %v", err)
+			slog.Error("list entries scan failed", "user_id", userID, "error", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
@@ -229,7 +229,7 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 		Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Tags, &e.Rating, &e.Date,
 			&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
 	if err != nil {
-		log.Printf("upsert entry: %v", err)
+		slog.Error("upsert entry failed", "user_id", userID, "entry_id", e.ID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -248,7 +248,7 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Pool.Exec(r.Context(),
 		`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
 	if err != nil {
-		log.Printf("delete entry: %v", err)
+		slog.Error("delete entry failed", "user_id", userID, "entry_id", id, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -262,7 +262,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Pool.Exec(r.Context(),
 		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
 	if err != nil {
-		log.Printf("delete user entries: %v", err)
+		slog.Error("delete user entries failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -270,6 +270,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	serviceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if supabaseURL == "" || serviceRoleKey == "" {
+		slog.Error("delete user not configured", "user_id", userID)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server not configured for user deletion"})
 		return
 	}
@@ -282,14 +283,14 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	adminRes, err := http.DefaultClient.Do(adminReq)
 	if err != nil {
-		log.Printf("delete user admin: %v", err)
+		slog.Error("delete user admin request failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 	adminRes.Body.Close()
 
 	if adminRes.StatusCode < 200 || adminRes.StatusCode >= 300 {
-		log.Printf("delete user admin: status %d", adminRes.StatusCode)
+		slog.Error("delete user admin rejected", "user_id", userID, "status", adminRes.StatusCode)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to delete auth user"})
 		return
 	}
@@ -303,7 +304,7 @@ func DeleteAllEntries(w http.ResponseWriter, r *http.Request) {
 	_, err := db.Pool.Exec(r.Context(),
 		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
 	if err != nil {
-		log.Printf("delete all entries: %v", err)
+		slog.Error("delete all entries failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -342,7 +343,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			req.Entries[i].ID, userID, req.Entries[i].Title, req.Entries[i].URL, req.Entries[i].Difficulty, req.Entries[i].Tags, req.Entries[i].Rating, req.Entries[i].Date,
 			req.Entries[i].Stability, req.Entries[i].DifficultyFsrs, req.Entries[i].DueDate, req.Entries[i].Reps, req.Entries[i].Lapses, req.Entries[i].FSRSState, req.Entries[i].LastReviewAt)
 		if err != nil {
-			log.Printf("sync upsert: %v", err)
+			slog.Error("sync upsert failed", "user_id", userID, "entry_id", req.Entries[i].ID, "error", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
@@ -352,7 +353,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		_, err := db.Pool.Exec(r.Context(),
 			`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
 		if err != nil {
-			log.Printf("sync delete: %v", err)
+			slog.Error("sync delete failed", "user_id", userID, "entry_id", id, "error", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
@@ -362,7 +363,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		`SELECT `+cols+` FROM leetcode_entries WHERE user_id = $1
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
-		log.Printf("sync query: %v", err)
+		slog.Error("sync query failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
@@ -372,7 +373,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var e models.Entry
 		if err := scanEntry(&e, rows); err != nil {
-			log.Printf("sync scan: %v", err)
+			slog.Error("sync scan failed", "user_id", userID, "error", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}

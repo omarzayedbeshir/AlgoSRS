@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -17,6 +18,7 @@ func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			slog.Warn("missing authorization header", "path", r.URL.Path)
 			http.Error(w, `{"error":"missing authorization"}`, http.StatusUnauthorized)
 			return
 		}
@@ -26,12 +28,14 @@ func Auth(next http.Handler) http.Handler {
 		claims := &jwt.MapClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, keyFunc)
 		if err != nil || !token.Valid {
+			slog.Warn("invalid token", "path", r.URL.Path, "error", err)
 			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 			return
 		}
 
 		userID, ok := (*claims)["sub"].(string)
 		if !ok || userID == "" {
+			slog.Warn("missing sub claim in token", "path", r.URL.Path)
 			http.Error(w, `{"error":"invalid user"}`, http.StatusUnauthorized)
 			return
 		}
@@ -60,4 +64,8 @@ func keyFunc(token *jwt.Token) (interface{}, error) {
 func GetUserID(r *http.Request) string {
 	uid, _ := r.Context().Value(userIDKey).(string)
 	return uid
+}
+
+func ContextWithUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
 }

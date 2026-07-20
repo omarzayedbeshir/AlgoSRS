@@ -16,7 +16,8 @@ export const colors = {
   difficulty: { easy: '#34c759', medium: '#ff9500', hard: '#ff3b30' },
 };
 
-export const fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif';
+export const fontFamily =
+  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif';
 
 export function button(variant: 'primary' | 'secondary' | 'danger' | 'plain'): CSSProperties {
   const base: CSSProperties = {
@@ -37,7 +38,13 @@ export function button(variant: 'primary' | 'secondary' | 'danger' | 'plain'): C
     case 'danger':
       return { ...base, background: colors.red, color: colors.bg };
     case 'plain':
-      return { ...base, background: 'none', color: colors.accent, padding: '4px 8px', fontSize: 13 };
+      return {
+        ...base,
+        background: 'none',
+        color: colors.accent,
+        padding: '4px 8px',
+        fontSize: 13,
+      };
     default:
       return base;
   }
@@ -70,7 +77,8 @@ export function difficultyDot(difficulty: string): CSSProperties {
     width: 8,
     height: 8,
     borderRadius: '50%',
-    background: colors.difficulty[difficulty as keyof typeof colors.difficulty] || colors.textTertiary,
+    background:
+      colors.difficulty[difficulty as keyof typeof colors.difficulty] || colors.textTertiary,
     flexShrink: 0,
   };
 }

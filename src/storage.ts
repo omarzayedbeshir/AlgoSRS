@@ -9,7 +9,7 @@ export async function getAll(): Promise<LeetCodeEntry[]> {
 
 export async function save(entry: LeetCodeEntry): Promise<void> {
   const entries = await getAll();
-  const idx = entries.findIndex(e => e.url === entry.url);
+  const idx = entries.findIndex((e) => e.url === entry.url);
   if (idx >= 0) {
     entries[idx] = entry;
   } else {
@@ -20,7 +20,7 @@ export async function save(entry: LeetCodeEntry): Promise<void> {
 
 export async function remove(id: string): Promise<void> {
   const entries = await getAll();
-  const filtered = entries.filter(e => e.id !== id);
+  const filtered = entries.filter((e) => e.id !== id);
   await chrome.storage.local.set({ [ENTRIES_KEY]: filtered });
 }
 
@@ -39,5 +39,3 @@ export async function markSynced(ids: string[]): Promise<void> {
 export async function clearAll(): Promise<void> {
   await chrome.storage.local.remove(ENTRIES_KEY);
 }
-
-

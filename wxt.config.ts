@@ -6,7 +6,12 @@ export default defineConfig({
   manifest: {
     name: 'LC FSRS',
     version: '0.1.0',
-    description: 'Track LeetCode problem difficulty with ratings',
+    description: 'Spaced repetition for LeetCode problem reviews',
+    icons: {
+      '16': 'icon-16.png',
+      '48': 'icon-48.png',
+      '128': 'icon-128.png',
+    },
     permissions: ['storage', 'activeTab'],
     host_permissions: [
       '*://leetcode.com/*',

@@ -1,13 +1,14 @@
 import type { ProblemData, Difficulty } from '../types';
 
 export function extractTags(): string[] {
-  const topicsHeader = [...document.querySelectorAll<HTMLElement>('[class*="text-sd-foreground"]')]
-    .find(el => el.textContent?.trim() === 'Topics');
+  const topicsHeader = [
+    ...document.querySelectorAll<HTMLElement>('[class*="text-sd-foreground"]'),
+  ].find((el) => el.textContent?.trim() === 'Topics');
   if (topicsHeader) {
     const section = topicsHeader.closest<HTMLElement>('[class*="flex-col"]');
     if (section) {
       const tagLinks = section.querySelectorAll<HTMLAnchorElement>('a[href*="/tag/"]');
-      return [...new Set([...tagLinks].map(a => a.textContent?.trim()).filter(Boolean))];
+      return [...new Set([...tagLinks].map((a) => a.textContent?.trim()).filter(Boolean))];
     }
   }
   return [];
@@ -16,7 +17,10 @@ export function extractTags(): string[] {
 export function extractTitle(): string | null {
   const og = document.querySelector('meta[property="og:title"]');
   if (og) {
-    const c = og.getAttribute('content')?.replace(/ - LeetCode.*$/, '').trim();
+    const c = og
+      .getAttribute('content')
+      ?.replace(/ - LeetCode.*$/, '')
+      .trim();
     if (c) return c;
   }
   const titleEl = document.querySelector('[data-cy="question-title"]');
@@ -37,18 +41,22 @@ export function tryExtractDifficulty(): Difficulty | null {
     const d = badge.getAttribute('data-difficulty')?.toLowerCase();
     if (d === 'easy' || d === 'medium' || d === 'hard') return d;
   }
-  const diffEl = document.querySelector('.text-difficulty-easy, .text-difficulty-medium, .text-difficulty-hard, [class*="difficulty"]');
+  const diffEl = document.querySelector(
+    '.text-difficulty-easy, .text-difficulty-medium, .text-difficulty-hard, [class*="difficulty"]',
+  );
   if (diffEl?.textContent) {
     const t = diffEl.textContent.trim().toLowerCase();
     if (t === 'easy' || t === 'medium' || t === 'hard') return t;
   }
-  const diffMatch = document.documentElement.innerHTML.match(/"difficulty"\s*:\s*"(Easy|Medium|Hard)"/);
+  const diffMatch = document.documentElement.innerHTML.match(
+    /"difficulty"\s*:\s*"(Easy|Medium|Hard)"/,
+  );
   if (diffMatch) {
     return diffMatch[1].toLowerCase() as Difficulty;
   }
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  let node;
-  while (node = walker.nextNode()) {
+  let node: Node | null;
+  while ((node = walker.nextNode()) !== null) {
     const text = node.textContent?.trim();
     if (text === 'Easy') return 'easy';
     if (text === 'Medium') return 'medium';
@@ -61,7 +69,7 @@ export async function extractDifficulty(): Promise<Difficulty> {
   for (let i = 0; i < 10; i++) {
     const d = tryExtractDifficulty();
     if (d) return d;
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
   return tryExtractDifficulty() ?? 'medium';
 }
@@ -75,7 +83,7 @@ export async function extractProblemData(): Promise<ProblemData | null> {
       const tags = extractTags();
       return { title, url, difficulty, tags: tags.length ? tags : undefined };
     }
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
   return null;
 }
@@ -84,7 +92,7 @@ export async function waitForProblemData(): Promise<ProblemData | null> {
   for (let i = 0; i < 30; i++) {
     const data = await extractProblemData();
     if (data) return data;
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
   return null;
 }
