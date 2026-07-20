@@ -79,10 +79,11 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
   }
 
   return (
-    <div style={{ fontFamily }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '10px 16px', borderBottom: `1px solid ${colors.separator}`,
+        flexShrink: 0,
       }}>
         <button onClick={onBack} style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', color: colors.accent, fontSize: 15, padding: 0, fontFamily, cursor: 'pointer' }}>
           ‹ Back
@@ -93,43 +94,45 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
 
       {!confirmAction ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '16px 16px 12px' }}>
-            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{total}</div>
-              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Problems</div>
+          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '16px 16px 12px' }}>
+              <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{total}</div>
+                <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Problems</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgRatingPct}%</div>
+                <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Avg Rating</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgStability}</div>
+                <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Stability</div>
+              </div>
+              <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{entries.length}</div>
+                <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Reviews</div>
+              </div>
             </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgRatingPct}%</div>
-              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Avg Rating</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgStability}</div>
-              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Stability</div>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: 12, padding: '14px 12px', textAlign: 'center' }}>
-              <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{entries.length}</div>
-              <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Reviews</div>
-            </div>
-          </div>
 
-          <div style={{ padding: '0 16px 16px' }}>
-            <div style={{ background: colors.bg, borderRadius: 10, padding: 12 }}>
-              {[1, 2, 3, 4].map(r => (
-                <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: r === 4 ? 0 : 6 }}>
-                  <span style={{ fontSize: 14, minWidth: 24 }}>{RATING_EMOJI[r]}</span>
-                  <div style={{ flex: 1, height: 8, background: colors.bgTertiary, borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{
-                      width: total > 0 ? `${(ratingCounts[r] / total) * 100}%` : '0%',
-                      height: '100%', background: RATING_COLORS[r], borderRadius: 4,
-                    }} />
+            <div style={{ padding: '0 16px 16px' }}>
+              <div style={{ background: colors.bg, borderRadius: 10, padding: 12 }}>
+                {[1, 2, 3, 4].map(r => (
+                  <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: r === 4 ? 0 : 6 }}>
+                    <span style={{ fontSize: 14, minWidth: 24 }}>{RATING_EMOJI[r]}</span>
+                    <div style={{ flex: 1, height: 8, background: colors.bgTertiary, borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{
+                        width: total > 0 ? `${(ratingCounts[r] / total) * 100}%` : '0%',
+                        height: '100%', background: RATING_COLORS[r], borderRadius: 4,
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 12, color: colors.textSecondary, minWidth: 20, textAlign: 'right' }}>{ratingCounts[r]}</span>
                   </div>
-                  <span style={{ fontSize: 12, color: colors.textSecondary, minWidth: 20, textAlign: 'right' }}>{ratingCounts[r]}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
-          <div style={{ padding: '0 16px 16px' }}>
+          <div style={{ flexShrink: 0, padding: '0 16px 16px' }}>
             <div style={{ background: colors.bg, borderRadius: 10, overflow: 'hidden' }}>
               {[
                 { label: 'Reset all data', action: () => setConfirmAction('reset'), danger: false },
@@ -153,7 +156,7 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
           </div>
         </>
       ) : (
-        <div style={{ padding: 16 }}>
+        <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: 16 }}>
           <div style={{ background: colors.bgSecondary, borderRadius: 10, padding: 14 }}>
             {confirmAction === 'reset' ? (
               <>

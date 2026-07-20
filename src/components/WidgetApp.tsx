@@ -105,13 +105,11 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
     return (
       <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647, background: colors.bg, borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
         <div style={{ width: 300, height: 480, display: 'flex', flexDirection: 'column', fontFamily, fontSize: 14, color: colors.text }}>
-          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-            <ProfilePanel
-              onBack={() => setView('browse')}
-              onAuthChange={handleAuthChange}
-              onEntriesChanged={() => setSyncKey(k => k + 1)}
-            />
-          </div>
+          <ProfilePanel
+            onBack={() => setView('browse')}
+            onAuthChange={handleAuthChange}
+            onEntriesChanged={() => setSyncKey(k => k + 1)}
+          />
         </div>
       </div>
     );
