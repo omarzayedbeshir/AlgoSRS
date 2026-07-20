@@ -30,19 +30,6 @@ function computeStreak(dates: string[]): number {
   return count;
 }
 
-function getLast30Days(entries: LeetCodeEntry[]): number[] {
-  const counts = new Array(30).fill(0);
-  const today = new Date();
-  for (const e of entries) {
-    const d = e.updatedAt || e.date;
-    if (!d) continue;
-    const date = new Date(d);
-    const diff = Math.round((today.getTime() - date.getTime()) / 86400000);
-    if (diff >= 0 && diff < 30) counts[29 - diff]++;
-  }
-  return counts;
-}
-
 function getStabilityBuckets(entries: LeetCodeEntry[]): { label: string; value: number }[] {
   const values = entries.filter(e => e.stability != null && e.stability > 0).map(e => e.stability!);
   if (!values.length) return [];
@@ -191,9 +178,6 @@ export default function StatsPanel({ onBack }: Props) {
   const avgRating = total > 0 ? entries.reduce((s, e) => s + e.rating, 0) / total : 0;
   const dates = getReviewDates(entries);
   const streak = computeStreak(dates);
-  const last30 = getLast30Days(entries);
-  const totalLast30 = last30.reduce((a, b) => a + b, 0);
-
   const diffCounts = [
     { label: 'Easy', value: entries.filter(e => e.difficulty === 'easy').length, color: colors.difficulty.easy },
     { label: 'Medium', value: entries.filter(e => e.difficulty === 'medium').length, color: colors.difficulty.medium },
@@ -221,45 +205,6 @@ export default function StatsPanel({ onBack }: Props) {
     { title: `Difficulty (${total})`, render: () => <SimpleBarChart items={diffCounts} height={150} xLabel="Difficulty" /> },
     { title: `Rating Distribution (${total})`, render: () => <SimpleBarChart items={ratingItems} color={colors.accent} height={150} xLabel="Rating" /> },
     ...(topTags.length > 0 ? [{ title: `Top Topics (${topTags.length})`, render: () => <HBarChart items={topTags} maxLabelW={100} /> }] : []),
-    {
-      title: `Reviews (${totalLast30} in 30 days)`, render: () => (
-        <svg width={268} height={130}>
-          {(() => {
-            const max = Math.max(...last30, 1) * 1.2;
-            const chartH = 100;
-            const chartW = 232;
-            const n = last30.length;
-            const barW = Math.floor((chartW - n) / n);
-            return (
-              <>
-                <text transform={`rotate(-90, 10, ${chartH / 2})`} x={10} y={chartH / 2} textAnchor="middle" fill={colors.text} fontSize={11} fontWeight={600}>Reviews</text>
-                {[0, 0.5, 1].map(t => {
-                  const y = chartH * (1 - t);
-                  return (
-                    <g key={t}>
-                      <line x1={34} y1={y} x2={268} y2={y} stroke={colors.separator} strokeWidth={0.5} />
-                      <text x={32} y={y + 3} textAnchor="end" fill={colors.text} fontSize={10}>
-                        {Math.round(t * max)}
-                      </text>
-                    </g>
-                  );
-                })}
-                <line x1={34} y1={0} x2={34} y2={chartH} stroke={colors.separator} strokeWidth={0.5} />
-                {last30.map((v, i) => (
-                  <rect key={i} x={34 + i * (barW + 1)} y={chartH * (1 - v / max)} width={barW} height={chartH * (v / max)} rx={1} fill={v > 0 ? colors.accent : colors.bgTertiary} />
-                ))}
-                {[0, 5, 10, 15, 20, 25, 29].map(i => (
-                  <text key={i} x={34 + i * (barW + 1) + barW / 2} y={chartH + 12} textAnchor="middle" fill={colors.text} fontSize={9}>
-                    {i + 1}
-                  </text>
-                ))}
-                <text x={151} y={chartH + 26} textAnchor="middle" fill={colors.text} fontSize={11} fontWeight={600}>Day</text>
-              </>
-            );
-          })()}
-        </svg>
-      ),
-    },
     ...(stabilityTotal > 0 ? [{ title: `Stability (${stabilityTotal})`, render: () => <SimpleBarChart items={stabilityBuckets} color={colors.green} height={150} xLabel="Stability" /> }] : []),
   ];
 
