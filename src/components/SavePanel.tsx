@@ -47,6 +47,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
       id, title: problem.title, url: problem.url,
       difficulty: problem.difficulty, rating,
       date: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
     const entry = { ...reviewEntry(savedEntry ?? base, rating).updatedEntry, rating, date: now.toISOString() };
     await save(entry);

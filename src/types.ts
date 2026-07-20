@@ -11,6 +11,7 @@ export interface LeetCodeEntry {
   difficulty: Difficulty;
   rating: Rating;
   date: string;
+  updatedAt?: string;
   syncStatus?: SyncStatus;
   lastSyncedAt?: string;
   stability?: number;

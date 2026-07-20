@@ -8,7 +8,7 @@ type Entry struct {
 	Difficulty     string   `json:"difficulty"`
 	Rating         int      `json:"rating"`
 	Date           string   `json:"date"`
-	UpdatedAt      string   `json:"updated_at"`
+	UpdatedAt      string   `json:"updatedAt"`
 	Stability      float64  `json:"stability"`
 	DifficultyFsrs float64  `json:"difficultyFsrs"`
 	DueDate        *string  `json:"dueDate,omitempty"`

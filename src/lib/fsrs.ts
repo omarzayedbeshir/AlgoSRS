@@ -20,6 +20,7 @@ export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
       fsrsState: result.card.state,
       dueDate: result.card.due.toISOString(),
       lastReviewAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     },
     scheduledDays: result.card.scheduled_days,
   };

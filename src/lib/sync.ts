@@ -16,7 +16,9 @@ export async function syncAll(): Promise<void> {
   for (const e of localEntries) merged.set(e.url, e);
   for (const e of remoteEntries) {
     const existing = merged.get(e.url);
-    if (!existing || new Date(e.date) > new Date(existing.date)) {
+    const localTime = existing?.updatedAt || existing?.date;
+    const remoteTime = e.updatedAt || e.date;
+    if (!existing || (remoteTime && (!localTime || new Date(remoteTime) > new Date(localTime)))) {
       if (existing?.fsrsState && existing.fsrsState !== 0 && (!e.fsrsState || e.fsrsState === 0)) {
         continue;
       }
