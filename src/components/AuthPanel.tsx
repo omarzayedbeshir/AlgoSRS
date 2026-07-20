@@ -286,10 +286,8 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '6px 16px 10px', borderTop: `1px solid ${colors.separator}` }}>
-        <button onClick={() => setShowModal(true)} style={{ background: 'none', border: 'none', color: colors.accent, fontSize: 14, fontWeight: 500, fontFamily, cursor: 'pointer', padding: '4px 8px' }}>
-          Sign in
-        </button>
+      <div onClick={() => setShowModal(true)} style={{ display: 'flex', justifyContent: 'center', padding: '11px 16px', borderTop: `1px solid ${colors.separator}`, cursor: 'pointer', fontFamily, fontSize: 14, fontWeight: 500, color: colors.accent, userSelect: 'none' }}>
+        Sign in
       </div>
 
       {showModal && (
