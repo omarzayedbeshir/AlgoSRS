@@ -19,6 +19,9 @@ func sanitizeEntry(e *models.Entry) {
 	if e.Date == "" {
 		e.Date = time.Now().UTC().Format(time.RFC3339)
 	}
+	if e.Tags == nil {
+		e.Tags = []string{}
+	}
 	if e.DueDate == nil || *e.DueDate == "" {
 		now := time.Now().UTC().Format(time.RFC3339)
 		e.DueDate = &now
