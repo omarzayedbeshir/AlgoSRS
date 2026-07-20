@@ -26,12 +26,6 @@ export function reviewEntry(entry: LeetCodeEntry, grade: Rating): {
   };
 }
 
-export function getRetrievability(entry: LeetCodeEntry): number | null {
-  if (entry.fsrsState === undefined || entry.fsrsState === 0 || !entry.lastReviewAt) return null;
-  const card = cardFromEntry(entry);
-  return scheduler.get_retrievability(card, new Date(), false);
-}
-
 function cardFromEntry(entry: LeetCodeEntry) {
   const card = createEmptyCard(entry.lastReviewAt ? new Date(entry.lastReviewAt) : new Date(entry.date));
   if (entry.fsrsState !== undefined && entry.fsrsState !== 0) {

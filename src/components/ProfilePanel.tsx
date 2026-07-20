@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { getAll, clearAll } from '../storage';
 import { getSupabase } from '../lib/supabase';
 import { api } from '../lib/api-client';

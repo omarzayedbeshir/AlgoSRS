@@ -18,11 +18,6 @@ export const colors = {
 
 export const fontFamily = '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export const card: CSSProperties = {
-  borderRadius: 12,
-  background: colors.bgSecondary,
-};
-
 export function button(variant: 'primary' | 'secondary' | 'danger' | 'plain'): CSSProperties {
   const base: CSSProperties = {
     fontFamily,
@@ -43,6 +38,8 @@ export function button(variant: 'primary' | 'secondary' | 'danger' | 'plain'): C
       return { ...base, background: colors.red, color: colors.bg };
     case 'plain':
       return { ...base, background: 'none', color: colors.accent, padding: '4px 8px', fontSize: 13 };
+    default:
+      return base;
   }
 }
 
@@ -59,18 +56,6 @@ export const input: CSSProperties = {
   boxSizing: 'border-box',
 };
 
-export const inputFocus: CSSProperties = {
-  ...input,
-  boxShadow: `0 0 0 3px ${colors.accentLight}`,
-};
-
-export const label: CSSProperties = {
-  fontSize: 13,
-  fontWeight: 600,
-  color: colors.textSecondary,
-  marginBottom: 4,
-};
-
 export const sectionHeader: CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
@@ -78,36 +63,6 @@ export const sectionHeader: CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: 0.5,
   padding: '16px 16px 6px',
-};
-
-export const separator: CSSProperties = {
-  height: 1,
-  background: colors.separator,
-  marginLeft: 16,
-};
-
-export function statCard(value: string | number, label: string): CSSProperties {
-  return {
-    background: colors.bgSecondary,
-    borderRadius: 12,
-    padding: '14px 12px',
-    textAlign: 'center' as const,
-  };
-}
-
-export const row: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  padding: '10px 16px',
-  background: colors.bg,
-  gap: 10,
-};
-
-export const chevron: CSSProperties = {
-  color: colors.textTertiary,
-  fontSize: 14,
-  fontWeight: 600,
-  marginLeft: 'auto',
 };
 
 export function difficultyDot(difficulty: string): CSSProperties {
@@ -126,15 +81,4 @@ export const emptyState: CSSProperties = {
   padding: '48px 16px',
   fontSize: 14,
   lineHeight: 1.6,
-};
-
-export const pill: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 6,
-  padding: '6px 14px',
-  borderRadius: 20,
-  fontSize: 12,
-  fontWeight: 500,
-  color: colors.bg,
 };

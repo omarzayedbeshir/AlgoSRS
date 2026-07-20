@@ -12,10 +12,8 @@ function maybeSync() {
 
 export default defineBackground({
   main() {
-    let sb = getSupabase();
-
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      sb = getSupabase();
+      const sb = getSupabase();
       switch (message.type) {
         case 'AUTH_SIGNUP':
           if (!sb) { sendResponse({ error: 'Supabase not configured' }); return; }

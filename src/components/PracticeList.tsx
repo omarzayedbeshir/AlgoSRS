@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove } from '../storage';
 import { api } from '../lib/api-client';
@@ -43,7 +43,7 @@ export default function PracticeList({ onSaveNew, showNewButton, isAuthenticated
     const diffDays = (d.getTime() - now.getTime()) / 86400000;
     if (diffDays < 0) {
       if (diffDays > -1) return 'Today';
-      return `${Math.ceil(Math.abs(diffDays))}d`;
+      return `${Math.floor(Math.abs(diffDays))}d`;
     }
     if (diffDays < 1) return 'Today';
     if (diffDays < 2) return 'Tomorrow';

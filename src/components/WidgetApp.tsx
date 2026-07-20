@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import type { ProblemData, Difficulty } from '../types';
+import { useState, useEffect, useRef } from 'react';
+import type { ProblemData } from '../types';
 import SavePanel from './SavePanel';
 import PracticeList from './PracticeList';
 import AuthPanel from './AuthPanel';
@@ -8,6 +8,7 @@ import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
 import { colors, fontFamily } from '../styles';
+import { extractTitle, extractUrl, tryExtractDifficulty, extractDifficulty, extractProblemData, waitForProblemData } from '../lib/leetcode';
 
 type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile';
 
@@ -40,39 +41,24 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
     getAuthState().then(s => {
       setAuthenticated(s.isAuthenticated);
       if (s.isAuthenticated) {
-        autoSync().then(() => setSyncKey(k => k + 1));
+        autoSync().then(() => setSyncKey(k => k + 1)).catch(() => {});
       }
-    });
+    }).catch(() => {});
     if (defaultMinimized) return;
     waitForProblemData().then(data => {
       if (data) { setProblem(data); setView('save'); return; }
       setView('browse');
-    });
+    }).catch(() => setView('browse'));
   }, [defaultMinimized]);
 
   useEffect(() => {
-    if (defaultMinimized) return;
     const poll = setInterval(() => {
       extractProblemData().then(data => {
         const currentUrl = window.location.href;
         if (data && data.url !== prevUrlRef.current) {
           prevUrlRef.current = data.url;
           setProblem(data);
-          setView('save');
-        }
-      });
-    }, 2000);
-    return () => clearInterval(poll);
-  }, [defaultMinimized]);
-
-  useEffect(() => {
-    if (!defaultMinimized) return;
-    const poll = setInterval(() => {
-      extractProblemData().then(data => {
-        const currentUrl = window.location.href;
-        if (data && data.url !== prevUrlRef.current) {
-          prevUrlRef.current = data.url;
-          setProblem(data);
+          if (!defaultMinimized) setView('save');
         }
       });
     }, 2000);
@@ -83,7 +69,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
     const title = extractTitle();
     const url = extractUrl();
     if (!title || !url) return;
-    setProblem({ title, url, difficulty: tryExtractDifficulty() });
+    setProblem({ title, url, difficulty: tryExtractDifficulty() ?? 'medium' });
     setView('save');
   };
 
@@ -177,67 +163,4 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
       </div>
     </div>
   );
-}
-
-async function waitForProblemData(): Promise<ProblemData | null> {
-  for (let i = 0; i < 30; i++) {
-    const data = await extractProblemData();
-    if (data) return data;
-    await new Promise(r => setTimeout(r, 200));
-  }
-  return null;
-}
-
-async function extractProblemData(): Promise<ProblemData | null> {
-  const title = extractTitle();
-  const url = extractUrl();
-  if (!title || !url) return null;
-  const difficulty = await extractDifficulty();
-  if (!title || !url) return null;
-  return { title, url, difficulty };
-}
-
-function extractTitle(): string | null {
-  const og = document.querySelector('meta[property="og:title"]');
-  if (og) {
-    const c = og.getAttribute('content')?.replace(/ - LeetCode.*$/, '').trim();
-    if (c) return c;
-  }
-  const titleEl = document.querySelector('[data-cy="question-title"]');
-  if (titleEl?.textContent) return titleEl.textContent.trim();
-  const t = document.title.replace(/ - LeetCode(?: - \w+)?$/, '').trim();
-  if (t) return t;
-  return null;
-}
-
-function extractUrl(): string | null {
-  const match = window.location.href.match(/^https?:\/\/leetcode\.com\/problems\/[^/?#]+/);
-  return match ? match[0] : null;
-}
-
-function tryExtractDifficulty(): Difficulty {
-  const badge = document.querySelector('[data-difficulty]');
-  if (badge) {
-    const d = badge.getAttribute('data-difficulty')?.toLowerCase();
-    if (d === 'easy' || d === 'medium' || d === 'hard') return d;
-  }
-  const diffEl = document.querySelector('.text-difficulty-easy, .text-difficulty-medium, .text-difficulty-hard, [class*="difficulty"]');
-  if (diffEl?.textContent) {
-    const t = diffEl.textContent.trim().toLowerCase();
-    if (t === 'easy' || t === 'medium' || t === 'hard') return t;
-  }
-  const diffMatch = document.documentElement.innerHTML.match(/"difficulty"\s*:\s*"(Easy|Medium|Hard)"/);
-  if (diffMatch) {
-    return diffMatch[1].toLowerCase() as Difficulty;
-  }
-  return 'medium';
-}
-
-async function extractDifficulty(): Promise<Difficulty> {
-  for (let i = 0; i < 10; i++) {
-    const d = tryExtractDifficulty();
-    if (d !== 'medium') return d;
-    await new Promise(r => setTimeout(r, 200));
-  }
-  return tryExtractDifficulty();
 }

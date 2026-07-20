@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getSupabase, getAuthState } from '../lib/supabase';
 import { getAll, clearAll } from '../storage';
 import { autoSync, syncAll } from '../lib/sync';
@@ -30,6 +30,22 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     getAuthState().then(setAuth);
   }, []);
 
+  const onAuthSuccess = useCallback(async () => {
+    setEmail('');
+    setPassword('');
+    const local = await getAll();
+    if (local.length > 0) {
+      setPendingMerge(true);
+      return;
+    }
+    try { await autoSync(); } catch {}
+    const state = await getAuthState();
+    setAuth(state);
+    setShowModal(false);
+    onAuthChange();
+    onEntriesChanged?.();
+  }, [onAuthChange, onEntriesChanged]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -51,26 +67,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
       if (!data.session) {
         setMessage("Account created! Check your email (and spam) to confirm.");
-        setEmail('');
-        setPassword('');
         setMode('login');
         return;
       }
 
-      setEmail('');
-      setPassword('');
-      const local = await getAll();
-      if (local.length > 0) {
-        setPendingMerge(true);
-        return;
-      }
-
-      try { await autoSync(); } catch {}
-      const state = await getAuthState();
-      setAuth(state);
-      setShowModal(false);
-      onAuthChange();
-      onEntriesChanged?.();
+      await onAuthSuccess();
       return;
     }
 
@@ -91,20 +92,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       return;
     }
 
-    setEmail('');
-    setPassword('');
-    const local = await getAll();
-    if (local.length > 0) {
-      setPendingMerge(true);
-      return;
-    }
-
-    try { await autoSync(); } catch {}
-    const state = await getAuthState();
-    setAuth(state);
-    setShowModal(false);
-    onAuthChange();
-    onEntriesChanged?.();
+    await onAuthSuccess();
   }
 
   async function handleLogout() {
@@ -126,34 +114,25 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     setLoading(true);
     setError('');
 
-    const supabaseUrl = import.meta.env.WXT_PUBLIC_SUPABASE_URL;
-    const anonKey = import.meta.env.WXT_PUBLIC_SUPABASE_ANON_KEY;
+    const sb = getSupabase();
+    if (!sb) {
+      setError('Supabase not configured.');
+      setLoading(false);
+      return;
+    }
+
     const backendUrl = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
-    try {
-      const res = await fetch(`${supabaseUrl}/auth/v1/recover`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': anonKey,
-        },
-        body: JSON.stringify({
-          email,
-          redirect_to: `${backendUrl}/auth/callback`,
-        }),
-      });
+    const { error: err } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: `${backendUrl}/auth/callback`,
+    });
 
-      if (!res.ok) {
-        const body = await res.text().catch(() => '');
-        throw new Error(body || `Error ${res.status}`);
-      }
-
+    if (err) {
+      setError(err.message);
+    } else {
       setResetSent(true);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong.');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   async function handleReplace() {

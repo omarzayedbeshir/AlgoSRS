@@ -40,12 +40,4 @@ export async function clearAll(): Promise<void> {
   await chrome.storage.local.remove(ENTRIES_KEY);
 }
 
-export async function markAllPending(): Promise<void> {
-  const entries = await getAll();
-  for (const entry of entries) {
-    if (entry.syncStatus === 'synced') {
-      entry.syncStatus = 'pending';
-    }
-  }
-  await chrome.storage.local.set({ [ENTRIES_KEY]: entries });
-}
+

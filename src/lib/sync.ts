@@ -27,31 +27,26 @@ export async function syncAll(): Promise<void> {
   }
 
   for (const entry of merged.values()) {
-    await localSave(entry);
-  }
-
-  for (const entry of merged.values()) {
+    let toSave = entry;
     if ((!entry.fsrsState || entry.fsrsState === 0) && entry.rating) {
       const { updatedEntry } = reviewEntry(entry, entry.rating as Rating);
-      await localSave(updatedEntry);
+      toSave = updatedEntry;
     }
+    await localSave(toSave);
   }
 
   await markSynced([...merged.values()].map(e => e.id));
 }
 
 export async function autoSync(): Promise<void> {
-  if (_syncing) { console.log('[sync] already syncing, skip'); return; }
+  if (_syncing) return;
   const state = await getAuthState();
-  if (!state.isAuthenticated) { console.log('[sync] not authenticated, skip'); return; }
+  if (!state.isAuthenticated) return;
 
   _syncing = true;
-  console.log('[sync] starting sync...');
   try {
     await syncAll();
-    console.log('[sync] sync complete');
-  } catch (err) {
-    console.error('[sync] sync failed:', err);
+  } catch {
   } finally {
     _syncing = false;
   }

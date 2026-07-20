@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ProblemData, Rating, LeetCodeEntry } from '../types';
 import { getAll, save } from '../storage';
 import { api } from '../lib/api-client';
@@ -23,6 +23,9 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
   const [savedEntry, setSavedEntry] = useState<LeetCodeEntry | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const timerRef = useRef<number>();
+  const urlRef = useRef(problem.url);
+  urlRef.current = problem.url;
 
   useEffect(() => {
     setRating(null);
@@ -30,6 +33,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
     setSaving(false);
     setSaved(false);
     getAll().then(entries => {
+      if (urlRef.current !== problem.url) return;
       const existing = entries.find(e => e.url === problem.url);
       if (existing) {
         setSavedEntry(existing);
@@ -37,6 +41,8 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
       }
     });
   }, [problem.url]);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   async function handleSave() {
     if (!rating) return;
@@ -51,10 +57,10 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
     };
     const entry = { ...reviewEntry(savedEntry ?? base, rating).updatedEntry, rating, date: now.toISOString() };
     await save(entry);
-    try { await api.upsertEntry(entry); } catch (err) { console.error('save sync failed:', err); }
+    try { await api.upsertEntry(entry); } catch {}
     setSaved(true);
     setSaving(false);
-    setTimeout(onSaved, 800);
+    timerRef.current = window.setTimeout(onSaved, 800);
   }
 
   const diffColor = colors.difficulty[problem.difficulty] || colors.textTertiary;

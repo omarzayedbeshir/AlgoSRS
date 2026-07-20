@@ -44,8 +44,6 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const api = {
-  listEntries: () => request('/api/entries'),
-
   upsertEntry: (entry: LeetCodeEntry) =>
     request('/api/entries', {
       method: 'POST',
@@ -63,9 +61,9 @@ export const api = {
   deleteUser: () =>
     request('/api/user', { method: 'DELETE' }),
 
-  sync: (entries: any[], deletedIds: string[]) =>
+  sync: (entries: LeetCodeEntry[], deletedIds: string[]) =>
     request('/api/sync', {
       method: 'POST',
-      body: JSON.stringify({ entries, deleted_ids: deletedIds }),
+      body: JSON.stringify({ entries, deletedIds }),
     }),
 };
