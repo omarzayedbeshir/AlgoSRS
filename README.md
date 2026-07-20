@@ -7,6 +7,12 @@
 
 A Chrome extension that uses the [FSRS](https://github.com/open-spaced-repetition/ts-fsrs) spaced-repetition algorithm — the same scheduler powering Anki — to help LeetCode users systematically review and retain problem-solving skills. Save problems with a rating, review on an FSRS-optimized schedule, and sync across devices.
 
+## Demo
+
+<p align="center">
+  <img src="screenshots/demo.gif" alt="LC FSRS Demo">
+</p>
+
 **Stack**: WXT / React 18 / Go 1.22 + stdlib / PostgreSQL (pgx v5) / Supabase Auth / ts-fsrs v5 / Railway
 
 ## Architecture
@@ -52,10 +58,6 @@ backend/
 ├── db/schema.sql         # DDL
 └── models/entry.go       # Entry, SyncRequest, SyncResponse
 ```
-
-## Demo
-
-![LC FSRS Demo](screenshots/demo.gif)
 
 ## Getting Started
 
