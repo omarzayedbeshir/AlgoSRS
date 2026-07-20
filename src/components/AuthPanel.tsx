@@ -22,6 +22,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   const [message, setMessage] = useState('');
   const [pendingMerge, setPendingMerge] = useState(false);
   const [mergeBusy, setMergeBusy] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
@@ -107,6 +108,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   }
 
   async function handleLogout() {
+    setLoggingOut(true);
     const sb = getSupabase();
     if (sb) {
       try { await autoSync(); } catch {}
@@ -116,6 +118,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
     const state = await getAuthState();
     setAuth(state);
     onAuthChange();
+    setLoggingOut(false);
   }
 
   async function handleSendReset(e: React.FormEvent) {
@@ -192,7 +195,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
             <button onClick={handleReplace} disabled={mergeBusy} style={{ ...button('primary'), fontSize: 13, padding: '8px 16px', opacity: mergeBusy ? 0.6 : 1 }}>
               {mergeBusy ? 'Working...' : 'Replace with cloud'}
             </button>
-            <button onClick={() => { try { autoSync(); } catch {}; setPendingMerge(false); closeModal(); }} disabled={mergeBusy} style={{ ...button('secondary'), fontSize: 13, padding: '8px 16px', opacity: mergeBusy ? 0.5 : 1 }}>
+            <button onClick={async () => { try { await autoSync(); } catch {}; onEntriesChanged?.(); setPendingMerge(false); closeModal(); }} disabled={mergeBusy} style={{ ...button('secondary'), fontSize: 13, padding: '8px 16px', opacity: mergeBusy ? 0.5 : 1 }}>
               Merge
             </button>
           </div>
@@ -268,11 +271,15 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
 
   if (auth.isAuthenticated) {
     return (
-      <div style={{ display: 'flex', gap: 8, padding: '6px 16px 10px', borderTop: `1px solid ${colors.separator}` }}>
+      <div style={{ display: 'flex', gap: 8, padding: '6px 16px 10px', borderTop: `1px solid ${colors.separator}`, alignItems: 'center' }}>
         {onShowProfile && (
-          <button onClick={onShowProfile} style={button('plain')}>Profile</button>
+          <button onClick={onShowProfile} disabled={loggingOut} style={{ ...button('plain'), opacity: loggingOut ? 0.5 : 1 }}>Profile</button>
         )}
-        <button onClick={handleLogout} style={{ ...button('plain'), color: colors.red }}>Log out</button>
+        {loggingOut ? (
+          <span style={{ fontSize: 13, color: colors.textSecondary, fontFamily, padding: '4px 8px' }}>Signing out…</span>
+        ) : (
+          <button onClick={handleLogout} style={{ ...button('plain'), color: colors.red }}>Log out</button>
+        )}
       </div>
     );
   }
