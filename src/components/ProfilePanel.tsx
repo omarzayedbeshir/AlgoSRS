@@ -9,12 +9,13 @@ interface Props {
   onBack: () => void;
   onAuthChange: () => void;
   onEntriesChanged?: () => void;
+  onShowStats?: () => void;
 }
 
 const RATING_EMOJI: Record<number, string> = { 1: '😰', 2: '😅', 3: '🙂', 4: '😎' };
 const RATING_COLORS: Record<number, string> = { 1: '#ff3b30', 2: '#ff9500', 3: '#34c759', 4: '#0071e3' };
 
-export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }: Props) {
+export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged, onShowStats }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
   const [confirmAction, setConfirmAction] = useState<'reset' | 'delete' | null>(null);
   const [confirmText, setConfirmText] = useState('');
@@ -135,6 +136,7 @@ export default function ProfilePanel({ onBack, onAuthChange, onEntriesChanged }:
           <div style={{ flexShrink: 0, padding: '0 16px 16px' }}>
             <div style={{ background: colors.bg, borderRadius: 10, overflow: 'hidden' }}>
               {[
+                { label: 'Statistics', action: () => onShowStats?.(), danger: false },
                 { label: 'Reset all data', action: () => setConfirmAction('reset'), danger: false },
                 { label: 'Delete account', action: () => setConfirmAction('delete'), danger: true },
               ].map((item, i, arr) => (

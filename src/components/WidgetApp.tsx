@@ -4,13 +4,14 @@ import SavePanel from './SavePanel';
 import PracticeList from './PracticeList';
 import AuthPanel from './AuthPanel';
 import ProfilePanel from './ProfilePanel';
+import StatsPanel from './StatsPanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
 import { colors, fontFamily } from '../styles';
 import { extractTitle, extractUrl, tryExtractDifficulty, extractProblemData, waitForProblemData } from '../lib/leetcode';
 
-type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile';
+type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile' | 'stats';
 
 const T = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -136,6 +137,10 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
     setView('profile');
   }
 
+  function handleShowStats() {
+    setView('stats');
+  }
+
   if (view === 'profile') {
     return (
       <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647, background: colors.bg, borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
@@ -144,7 +149,18 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
             onBack={() => setView('browse')}
             onAuthChange={handleAuthChange}
             onEntriesChanged={() => setSyncKey(k => k + 1)}
+            onShowStats={handleShowStats}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'stats') {
+    return (
+      <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647, background: colors.bg, borderRadius: 14, boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+        <div style={{ width: 300, height: 480, display: 'flex', flexDirection: 'column', fontFamily, fontSize: 14, color: colors.text }}>
+          <StatsPanel onBack={() => setView('profile')} />
         </div>
       </div>
     );
