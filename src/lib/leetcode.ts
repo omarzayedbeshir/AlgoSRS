@@ -1,34 +1,16 @@
 import type { ProblemData, Difficulty } from '../types';
 
 export function extractTags(): string[] {
-  const nextData = document.getElementById('__NEXT_DATA__');
-  if (nextData) {
-    try {
-      const parsed = JSON.parse(nextData.textContent || '');
-      const queries = parsed?.props?.pageProps?.dehydratedState?.queries;
-      if (queries) {
-        for (const q of queries) {
-          const tags = q?.state?.data?.question?.topicTags;
-          if (tags && Array.isArray(tags)) {
-            const names = tags.map((t: any) => t.name).filter(Boolean);
-            if (names.length) return names;
-          }
-        }
-      }
-    } catch {}
-  }
-
-  const links = document.querySelectorAll<HTMLAnchorElement>('a[href*="/tag/"]');
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const a of links) {
-    const t = a.textContent?.trim();
-    if (t && !seen.has(t)) {
-      seen.add(t);
-      result.push(t);
+  const topicsHeader = [...document.querySelectorAll<HTMLElement>('[class*="text-sd-foreground"]')]
+    .find(el => el.textContent?.trim() === 'Topics');
+  if (topicsHeader) {
+    const section = topicsHeader.closest<HTMLElement>('[class*="flex-col"]');
+    if (section) {
+      const tagLinks = section.querySelectorAll<HTMLAnchorElement>('a[href*="/tag/"]');
+      return [...new Set([...tagLinks].map(a => a.textContent?.trim()).filter(Boolean))];
     }
   }
-  return result;
+  return [];
 }
 
 export function extractTitle(): string | null {
