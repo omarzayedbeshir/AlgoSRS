@@ -51,7 +51,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
     const now = new Date();
     const base: LeetCodeEntry = {
       id, title: problem.title, url: problem.url,
-      difficulty: problem.difficulty, rating,
+      difficulty: problem.difficulty, tags: problem.tags, rating,
       date: now.toISOString(),
       updatedAt: now.toISOString(),
     };

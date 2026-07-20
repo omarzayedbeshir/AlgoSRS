@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS leetcode_entries (
     title           TEXT            NOT NULL,
     url             TEXT            NOT NULL,
     difficulty      TEXT            NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    tags            TEXT[]          NOT NULL DEFAULT '{}',
     rating          SMALLINT        NOT NULL CHECK (rating >= 1 AND rating <= 4),
     date            TIMESTAMPTZ     NOT NULL,
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),

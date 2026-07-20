@@ -1,5 +1,36 @@
 import type { ProblemData, Difficulty } from '../types';
 
+export function extractTags(): string[] {
+  const nextData = document.getElementById('__NEXT_DATA__');
+  if (nextData) {
+    try {
+      const parsed = JSON.parse(nextData.textContent || '');
+      const queries = parsed?.props?.pageProps?.dehydratedState?.queries;
+      if (queries) {
+        for (const q of queries) {
+          const tags = q?.state?.data?.question?.topicTags;
+          if (tags && Array.isArray(tags)) {
+            const names = tags.map((t: any) => t.name).filter(Boolean);
+            if (names.length) return names;
+          }
+        }
+      }
+    } catch {}
+  }
+
+  const links = document.querySelectorAll<HTMLAnchorElement>('a[href*="/tag/"]');
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const a of links) {
+    const t = a.textContent?.trim();
+    if (t && !seen.has(t)) {
+      seen.add(t);
+      result.push(t);
+    }
+  }
+  return result;
+}
+
 export function extractTitle(): string | null {
   const og = document.querySelector('meta[property="og:title"]');
   if (og) {
@@ -58,7 +89,8 @@ export async function extractProblemData(): Promise<ProblemData | null> {
   const url = extractUrl();
   if (!title || !url) return null;
   const difficulty = await extractDifficulty();
-  return { title, url, difficulty };
+  const tags = extractTags();
+  return { title, url, difficulty, tags: tags.length ? tags : undefined };
 }
 
 export async function waitForProblemData(): Promise<ProblemData | null> {

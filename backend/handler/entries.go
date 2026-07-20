@@ -13,7 +13,7 @@ import (
 	"lc-fsrs-backend/models"
 )
 
-const cols = "id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at"
+const cols = "id, user_id, title, url, difficulty, tags, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at"
 
 func sanitizeEntry(e *models.Entry) {
 	if e.Date == "" {
@@ -30,7 +30,7 @@ func sanitizeEntry(e *models.Entry) {
 }
 
 func scanEntry(e *models.Entry, rows interface{ Scan(...interface{}) error }) error {
-	return rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date,
+	return rows.Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Tags, &e.Rating, &e.Date,
 		&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
 }
 
@@ -204,11 +204,12 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 	sanitizeEntry(&e)
 
 	err := db.Pool.QueryRow(r.Context(),
-		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
+		`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, tags, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11, $12, $13, $14, $15)
 		 ON CONFLICT (user_id, url) DO UPDATE SET
 		     title = EXCLUDED.title,
 		     difficulty = EXCLUDED.difficulty,
+		     tags = EXCLUDED.tags,
 		     rating = EXCLUDED.rating,
 		     date = EXCLUDED.date,
 		     stability = EXCLUDED.stability,
@@ -220,9 +221,9 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 		     last_review_at = EXCLUDED.last_review_at,
 		     updated_at = NOW()
 		 RETURNING `+cols,
-		e.ID, userID, e.Title, e.URL, e.Difficulty, e.Rating, e.Date,
+		e.ID, userID, e.Title, e.URL, e.Difficulty, e.Tags, e.Rating, e.Date,
 		e.Stability, e.DifficultyFsrs, e.DueDate, e.Reps, e.Lapses, e.FSRSState, e.LastReviewAt).
-		Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Rating, &e.Date,
+		Scan(&e.ID, &e.UserID, &e.Title, &e.URL, &e.Difficulty, &e.Tags, &e.Rating, &e.Date,
 			&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
 	if err != nil {
 		log.Printf("upsert entry: %v", err)
@@ -319,11 +320,12 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	for i := range req.Entries {
 		sanitizeEntry(&req.Entries[i])
 		_, err := db.Pool.Exec(r.Context(),
-			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, $9, $10, $11, $12, $13, $14)
+			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, tags, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11, $12, $13, $14, $15)
 			 ON CONFLICT (user_id, url) DO UPDATE SET
 			     title = EXCLUDED.title,
 			     difficulty = EXCLUDED.difficulty,
+			     tags = EXCLUDED.tags,
 			     rating = EXCLUDED.rating,
 			     date = EXCLUDED.date,
 			     stability = EXCLUDED.stability,
@@ -334,7 +336,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			     fsrs_state = EXCLUDED.fsrs_state,
 			     last_review_at = EXCLUDED.last_review_at,
 			     updated_at = NOW()`,
-			req.Entries[i].ID, userID, req.Entries[i].Title, req.Entries[i].URL, req.Entries[i].Difficulty, req.Entries[i].Rating, req.Entries[i].Date,
+			req.Entries[i].ID, userID, req.Entries[i].Title, req.Entries[i].URL, req.Entries[i].Difficulty, req.Entries[i].Tags, req.Entries[i].Rating, req.Entries[i].Date,
 			req.Entries[i].Stability, req.Entries[i].DifficultyFsrs, req.Entries[i].DueDate, req.Entries[i].Reps, req.Entries[i].Lapses, req.Entries[i].FSRSState, req.Entries[i].LastReviewAt)
 		if err != nil {
 			log.Printf("sync upsert: %v", err)

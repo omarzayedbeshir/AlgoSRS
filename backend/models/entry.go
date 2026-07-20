@@ -6,6 +6,7 @@ type Entry struct {
 	Title          string   `json:"title"`
 	URL            string   `json:"url"`
 	Difficulty     string   `json:"difficulty"`
+	Tags           []string `json:"tags"`
 	Rating         int      `json:"rating"`
 	Date           string   `json:"date"`
 	UpdatedAt      string   `json:"updatedAt"`

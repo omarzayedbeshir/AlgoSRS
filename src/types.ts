@@ -9,6 +9,7 @@ export interface LeetCodeEntry {
   title: string;
   url: string;
   difficulty: Difficulty;
+  tags?: string[];
   rating: Rating;
   date: string;
   updatedAt?: string;
@@ -27,6 +28,7 @@ export interface ProblemData {
   title: string;
   url: string;
   difficulty: Difficulty;
+  tags?: string[];
 }
 
 export interface AuthState {
