@@ -1,7 +1,8 @@
 import { getAll, save as localSave, markSynced } from '../storage';
 import { api } from './api-client';
-import type { LeetCodeEntry } from '../types';
+import type { LeetCodeEntry, Rating } from '../types';
 import { getAuthState } from './supabase';
+import { reviewEntry } from './fsrs';
 
 let _syncing = false;
 
@@ -16,6 +17,9 @@ export async function syncAll(): Promise<void> {
   for (const e of remoteEntries) {
     const existing = merged.get(e.url);
     if (!existing || new Date(e.date) > new Date(existing.date)) {
+      if (existing?.fsrsState && existing.fsrsState !== 0 && (!e.fsrsState || e.fsrsState === 0)) {
+        continue;
+      }
       merged.set(e.url, { ...e, syncStatus: 'synced', lastSyncedAt: new Date().toISOString() });
     }
   }
@@ -23,6 +27,14 @@ export async function syncAll(): Promise<void> {
   for (const entry of merged.values()) {
     await localSave(entry);
   }
+
+  for (const entry of merged.values()) {
+    if ((!entry.fsrsState || entry.fsrsState === 0) && entry.rating) {
+      const { updatedEntry } = reviewEntry(entry, entry.rating as Rating);
+      await localSave(updatedEntry);
+    }
+  }
+
   await markSynced([...merged.values()].map(e => e.id));
 }
 
