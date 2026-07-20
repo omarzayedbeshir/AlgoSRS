@@ -55,19 +55,7 @@ backend/
 
 ## Demo
 
-<!-- TODO: Add screenshot of the widget in action on LeetCode
-
-![Widget on LeetCode](screenshots/widget-save.png)
-
-<details>
-<summary>More screenshots</summary>
-
-![Practice list](screenshots/widget-practice.png)
-
-![Statistics dashboard](screenshots/widget-stats.png)
-
-</details>
--->
+![LC FSRS Demo](screenshots/demo.gif)
 
 ## Getting Started
 
