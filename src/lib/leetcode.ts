@@ -67,12 +67,17 @@ export async function extractDifficulty(): Promise<Difficulty> {
 }
 
 export async function extractProblemData(): Promise<ProblemData | null> {
-  const title = extractTitle();
-  const url = extractUrl();
-  if (!title || !url) return null;
-  const difficulty = await extractDifficulty();
-  const tags = extractTags();
-  return { title, url, difficulty, tags: tags.length ? tags : undefined };
+  for (let i = 0; i < 10; i++) {
+    const url = extractUrl();
+    const title = extractTitle();
+    const difficulty = tryExtractDifficulty();
+    if (url && title && difficulty) {
+      const tags = extractTags();
+      return { title, url, difficulty, tags: tags.length ? tags : undefined };
+    }
+    await new Promise(r => setTimeout(r, 200));
+  }
+  return null;
 }
 
 export async function waitForProblemData(): Promise<ProblemData | null> {
