@@ -9,9 +9,9 @@ import (
 	"os"
 	"testing"
 
-	"lc-fsrs-backend/db"
-	"lc-fsrs-backend/middleware"
-	"lc-fsrs-backend/models"
+	"algosrs-backend/db"
+	"algosrs-backend/middleware"
+	"algosrs-backend/models"
 )
 
 func TestMain(m *testing.M) {

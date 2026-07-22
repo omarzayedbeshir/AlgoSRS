@@ -1,6 +1,6 @@
 import type { LeetCodeEntry } from './types';
 
-const ENTRIES_KEY = 'lc-fsrs-entries';
+const ENTRIES_KEY = 'algosrs-entries';
 
 export async function getAll(): Promise<LeetCodeEntry[]> {
   const result = await chrome.storage.local.get<Record<string, LeetCodeEntry[]>>(ENTRIES_KEY);

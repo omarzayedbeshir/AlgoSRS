@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: lc-fsrs
+      POSTGRES_DB: algosrs
       POSTGRES_PASSWORD: devpassword
     ports:
       - "5432:5432"

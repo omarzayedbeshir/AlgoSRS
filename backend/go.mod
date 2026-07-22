@@ -1,4 +1,4 @@
-module lc-fsrs-backend
+module algosrs-backend
 
 go 1.22
 

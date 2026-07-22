@@ -4,7 +4,7 @@ export default defineConfig({
   srcDir: 'src',
   outDir: 'output',
   manifest: {
-    name: 'LC FSRS',
+    name: 'AlgoSRS',
     version: '0.1.0',
     description: 'Spaced repetition for LeetCode problem reviews',
     icons: {

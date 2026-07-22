@@ -3,6 +3,6 @@ dist/
 output/
 .wxt/
 .output/
-backend/lc-fsrs-backend
+backend/algosrs-backend
 *.local
 .env

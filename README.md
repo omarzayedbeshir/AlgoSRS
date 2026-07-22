@@ -1,4 +1,4 @@
-# LC FSRS
+# AlgoSRS
 
 [![CI](https://github.com/omarzayedbeshir/lc-fsrs/actions/workflows/ci.yml/badge.svg)](https://github.com/omarzayedbeshir/lc-fsrs/actions/workflows/ci.yml)
 [![Go 1.22](https://img.shields.io/badge/Go-1.22-00ADD8?logo=go)](https://go.dev)
@@ -10,7 +10,7 @@ A Chrome extension that uses the [FSRS](https://github.com/open-spaced-repetitio
 ## Demo
 
 <p align="center">
-  <img src="screenshots/demo.gif" alt="LC FSRS Demo">
+  <img src="screenshots/demo.gif" alt="AlgoSRS Demo">
 </p>
 
 **Stack**: WXT / React 18 / Go 1.22 + stdlib / PostgreSQL (pgx v5) / Supabase Auth / ts-fsrs v5 / Railway
@@ -113,7 +113,7 @@ npm run build                 # Extension → output/chrome-mv3/
 
 ## Chrome Web Store (planned)
 
-**Extension name:** LC FSRS — Spaced Repetition for LeetCode
+**Extension name:** AlgoSRS — Spaced Repetition for LeetCode
 
 **Short description:** Save LeetCode problems with FSRS ratings and review on an optimized schedule. Syncs across devices.
 

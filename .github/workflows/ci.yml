@@ -33,7 +33,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: lc-fsrs-test
+          POSTGRES_DB: algosrs-test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -53,7 +53,7 @@ jobs:
       - name: Tests
         working-directory: backend
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/lc-fsrs-test?sslmode=disable
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/algosrs-test?sslmode=disable
         run: go test ./... -count=1 -v
 
       - name: Build

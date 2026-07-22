@@ -269,7 +269,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
           }}
         >
           <span style={{ fontWeight: 600, fontSize: 13, color: colors.textSecondary }}>
-            LC FSRS
+            AlgoSRS
           </span>
           <div style={{ display: 'flex', gap: 2 }}>
             <button
@@ -368,7 +368,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
           transform: isMinimized ? 'scale(1)' : 'scale(0.3)',
           pointerEvents: isMinimized ? 'auto' : 'none',
         }}
-        title="Open LC FSRS"
+        title="Open AlgoSRS"
       >
         ⭐
       </div>

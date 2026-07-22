@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	"lc-fsrs-backend/db"
-	"lc-fsrs-backend/handler"
-	"lc-fsrs-backend/middleware"
+	"algosrs-backend/db"
+	"algosrs-backend/handler"
+	"algosrs-backend/middleware"
 )
 
 func main() {

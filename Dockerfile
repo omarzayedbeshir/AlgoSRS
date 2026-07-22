@@ -3,10 +3,10 @@ WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ .
-RUN go build -o lc-fsrs-backend .
+RUN go build -o algosrs-backend .
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
-COPY --from=builder /app/lc-fsrs-backend .
-CMD ["./lc-fsrs-backend"]
+COPY --from=builder /app/algosrs-backend .
+CMD ["./algosrs-backend"]

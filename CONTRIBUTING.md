@@ -10,8 +10,8 @@
 
 ```bash
 # Clone and install
-git clone https://github.com/<user>/lc-fsrs
-cd lc-fsrs
+git clone https://github.com/<user>/algosrs
+cd algosrs
 
 # Frontend
 npm install

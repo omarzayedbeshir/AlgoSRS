@@ -19,7 +19,7 @@ export default defineContentScript({
     const isProblemPage = !!window.location.href.match(/leetcode\.com\/problems\/[^/?#]+/);
 
     createShadowRootUi(ctx, {
-      name: 'lc-fsrs',
+      name: 'algosrs',
       position: 'overlay',
       alignment: 'bottom-right',
       zIndex: 2147483647,
