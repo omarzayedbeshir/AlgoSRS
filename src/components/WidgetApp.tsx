@@ -317,14 +317,15 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
                   border: 'none',
                   cursor: 'pointer',
                   color: colors.textSecondary,
-                  fontSize: 18,
+                  fontSize: 11,
                   padding: '0 4px',
                   lineHeight: 1,
                   fontFamily,
+                  fontWeight: 600,
                 }}
-                title="Minimize"
+                title="Minimize (Esc)"
               >
-                ⌄
+                esc
               </button>
             </div>
           </div>
