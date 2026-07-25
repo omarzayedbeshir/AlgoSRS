@@ -312,6 +312,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, _ = db.Pool.Exec(r.Context(),
+		`DELETE FROM user_delete_requests WHERE user_id = $1`, userID)
+
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	serviceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if supabaseURL == "" || serviceRoleKey == "" {
@@ -347,9 +350,6 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	_, _ = db.Pool.Exec(r.Context(),
-		`DELETE FROM user_delete_requests WHERE user_id = $1`, userID)
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
