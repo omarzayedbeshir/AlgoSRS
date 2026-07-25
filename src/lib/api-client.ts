@@ -46,7 +46,7 @@ async function request(path: string, options: RequestInit = {}, retries = 0): Pr
         body = await res.text();
         const parsed = JSON.parse(body);
         body = parsed.error || body;
-      } catch {}
+      } catch {/* empty */}
       throw new ApiError(body || res.statusText, res.status);
     }
 
