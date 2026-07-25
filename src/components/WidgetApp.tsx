@@ -8,7 +8,7 @@ import StatsPanel from './StatsPanel';
 import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
-import { colors, fontFamily } from '../styles';
+import { colors, fontFamily, button } from '../styles';
 import {
   extractTitle,
   extractUrl,

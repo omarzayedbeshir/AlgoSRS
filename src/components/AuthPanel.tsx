@@ -413,6 +413,13 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
             Log out
           </button>
         )}
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={() => window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')}
+          style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
+        >
+          Report Bug
+        </button>
       </div>
     );
   }
@@ -420,21 +427,29 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   return (
     <>
       <div
-        onClick={() => setShowModal(true)}
         style={{
           display: 'flex',
-          justifyContent: 'center',
-          padding: '11px 16px',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '6px 16px 10px',
           borderTop: `1px solid ${colors.separator}`,
-          cursor: 'pointer',
           fontFamily,
-          fontSize: 14,
-          fontWeight: 500,
-          color: colors.accent,
+          fontSize: 13,
           userSelect: 'none',
         }}
       >
-        Sign in
+        <span
+          onClick={() => setShowModal(true)}
+          style={{ cursor: 'pointer', fontWeight: 500, color: colors.accent, fontSize: 14 }}
+        >
+          Sign in
+        </span>
+        <button
+          onClick={() => window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')}
+          style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
+        >
+          Report Bug
+        </button>
       </div>
 
       {showModal && (
