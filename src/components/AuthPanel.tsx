@@ -25,6 +25,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
   const [loggingOut, setLoggingOut] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   useEffect(() => {
     getAuthState().then(setAuth);
@@ -69,7 +70,10 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       const { data, error: err } = await sb.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${backendUrl}/auth/callback` },
+        options: {
+          emailRedirectTo: `${backendUrl}/auth/callback`,
+          data: { marketing_consent: marketingConsent },
+        },
       });
       setLoading(false);
 
@@ -281,7 +285,29 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                 required
                 style={inputStyle}
               />
-              {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
+        {mode === 'signup' && (
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 12,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              lineHeight: 1.4,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={marketingConsent}
+              onChange={(e) => setMarketingConsent(e.target.checked)}
+              style={{ accentColor: colors.accent, flexShrink: 0 }}
+            />
+            I'd like to receive product updates and tips via email
+          </label>
+        )}
+
+        {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
               <button
                 type="submit"
                 disabled={loading}
@@ -357,6 +383,49 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           minLength={6}
           style={inputStyle}
         />
+
+        {mode === 'signup' && (
+          <div
+            onClick={() => setMarketingConsent(!marketingConsent)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              fontSize: 12,
+              color: colors.textSecondary,
+              cursor: 'pointer',
+              lineHeight: 1.4,
+              userSelect: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 18,
+                borderRadius: 9,
+                background: marketingConsent ? colors.accent : colors.bgTertiary,
+                position: 'relative',
+                flexShrink: 0,
+                transition: 'background 0.15s',
+              }}
+            >
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: colors.bg,
+                  position: 'absolute',
+                  top: 2,
+                  left: marketingConsent ? 16 : 2,
+                  transition: 'left 0.15s',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                }}
+              />
+            </div>
+            Receive product updates and tips
+          </div>
+        )}
 
         {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
         {message && <div style={{ fontSize: 12, color: colors.green }}>{message}</div>}

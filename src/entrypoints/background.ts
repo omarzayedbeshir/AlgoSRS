@@ -21,7 +21,11 @@ export default defineBackground({
             return;
           }
           sb.auth
-            .signUp({ email: message.payload.email, password: message.payload.password })
+            .signUp({
+              email: message.payload.email,
+              password: message.payload.password,
+              options: { data: { marketing_consent: message.payload.marketing_consent ?? false } },
+            })
             .then(({ data, error }) => {
               if (error) sendResponse({ error: error.message });
               else sendResponse({ session: data.session, user: data.user });
