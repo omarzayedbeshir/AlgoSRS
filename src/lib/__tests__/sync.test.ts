@@ -157,8 +157,19 @@ describe('sync', () => {
       expect(mockStorage.clearPendingDeletes).toHaveBeenCalledWith(pendingDeletes);
     });
 
-    it('skips sync when nothing has changed', async () => {
+    it('first sync always calls API even with empty local data', async () => {
       mockStorage.getAll.mockResolvedValue([]);
+      mockApi.sync.mockResolvedValue({ entries: [] });
+
+      await syncAll();
+
+      expect(mockApi.sync).toHaveBeenCalled();
+    });
+
+    it('delta sync skips API when nothing has changed', async () => {
+      mockStorage.getLastSyncAt.mockResolvedValue('2026-07-20T00:00:00.000Z');
+      mockStorage.getDirty.mockResolvedValue([]);
+      mockStorage.getPendingDeletes.mockResolvedValue([]);
 
       await syncAll();
 

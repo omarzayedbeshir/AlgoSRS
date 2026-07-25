@@ -11,7 +11,7 @@ export async function syncAll(): Promise<void> {
   const entries = lastSyncAt ? await getDirty() : await getAll();
   const deletedIds = await getPendingDeletes();
 
-  if (entries.length === 0 && deletedIds.length === 0) return;
+  if (lastSyncAt && entries.length === 0 && deletedIds.length === 0) return;
 
   const response = await api.sync(entries, deletedIds, lastSyncAt);
   const remoteEntries: LeetCodeEntry[] = response.entries;

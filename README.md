@@ -29,15 +29,21 @@ Go Backend (Railway)      Supabase Auth
 PostgreSQL
 ```
 
-Data flows local-first: entries are written to `chrome.storage.local` immediately for instant UI, then synced to the backend. Review scheduling is computed client-side via `ts-fsrs`. The background script syncs every 30 minutes and on auth state changes.
+Data flows local-first: entries are written to `chrome.storage.local` immediately for instant UI, then synced to the backend. Review scheduling is computed client-side via `ts-fsrs`. Background sync uses delta sync (dirty entries + pending deletes + `last_sync_at` cursor) with newer-`updated_at`-wins conflict resolution and FSRS state preservation. Server processes upserts and deletes in a single batch round trip.
 
 ## Key Engineering Decisions
 
 **Local-first with server sync.** All CRUD reads from `chrome.storage.local` — no loading spinners. Save and Review panels additionally `POST /api/entries` immediately for durability. Background sync merges on URL identity with newer-`date`-wins conflict resolution. Offline-capable by design.
 
-**Why Go for the backend.** Two external dependencies (`pgx`, `golang-jwt`). Single binary, ~200ms cold start on Railway's free tier. Go 1.22 `http.ServeMux` supports method-based routing (`mux.Handle("POST /api/entries", ...)`) natively — no framework needed for 8 routes. JWKS caching with 10-minute TTL for Supabase token verification.
+**Why Go for the backend.** Two external dependencies (`pgx`, `golang-jwt`). Single binary, ~200ms cold start on Railway's free tier. Go 1.22 `http.ServeMux` supports method-based routing (`mux.Handle("POST /api/entries", ...)`) natively — no framework needed for 9 routes. In-memory rate limiter, CORS allowlist, and input validation are all stdlib. JWKS caching with background refresh every 5 minutes for Supabase token verification.
 
 **Supabase Auth in a Chrome extension.** Standard PKCE assumes a web app that can receive OAuth redirects. In an extension, we provide a custom `SupportedStorage` adapter backed by `chrome.storage.local` so the session persists across popup lifetimes. Password reset uses the implicit flow (`POST /auth/v1/recover` directly from the extension); our Go backend serves a client-side JS page at `/auth/callback` that reads `#access_token=xxx&type=recovery` from the URL hash and renders an inline reset form.
+
+**Security-first middleware stack.** CORS uses an allowlist (extension origin, LeetCode domains, Railway domain) instead of `*`. In-memory per-user rate limiting (60 req/min for entries, 10/min for sync) with `Retry-After` headers. Input validation rejects malformed entries (title length, URL format, enum values). Request bodies capped at 1 MB. JWT validation uses JWKS only — no HMAC fallback. JWKS cache refreshes in the background every 5 minutes with stale-while-revalidate on error.
+
+**Two-step account deletion.** Deleting your account is a two-request flow: `POST /api/user/delete-request` records intent, then `DELETE /api/user?confirm=true` finalizes it. Delete requests expire after 24 hours.
+
+**Delta sync with deletion tracking.** Background sync sends only dirty entries (tracked via a `needsSync` flag) and a pending-deletes queue instead of the full dataset. The server returns only entries changed since the last sync cursor (`last_sync_at`). All upserts and deletes in a sync request are batched into a single `pgx.Batch` round trip instead of N individual queries.
 
 ## Project Structure
 
@@ -51,9 +57,16 @@ src/
 └── lib/                  # api-client, fsrs (scheduler wrapper),
                           # supabase (chrome.storage adapter), sync
 backend/
-├── main.go               # HTTP router (8 endpoints)
+├── main.go               # HTTP router (9 endpoints)
 ├── handler/entries.go    # All request handlers + password reset HTML page
-├── middleware/            # JWT auth, CORS, JWKS cache
+│   └── errors.go         # JSON response helper
+├── middleware/
+│   ├── auth.go           # JWT verification (JWKS only)
+│   ├── cors.go           # Origin allowlist
+│   ├── jwks.go           # JWKS cache with background refresh
+│   ├── ratelimit.go      # Per-user rate limiter
+│   ├── validate.go       # Input validation
+│   └── body.go           # Request size limit
 ├── db/postgres.go        # pgx connection pool
 ├── db/schema.sql         # DDL
 └── models/entry.go       # Entry, SyncRequest, SyncResponse
@@ -93,15 +106,36 @@ cd backend && golangci-lint run
 ## API
 
 | Method | Path | Auth | Description |
-|---|---|---|---|
+|---|---|---|---|---|
 | `GET` | `/api/health` | No | Health check |
 | `GET` | `/auth/callback` | No | Password reset form page |
 | `GET` | `/api/entries` | JWT | List entries |
 | `POST` | `/api/entries` | JWT | Upsert entry |
 | `DELETE` | `/api/entries` | JWT | Delete entry by `?id=` |
 | `DELETE` | `/api/user/entries` | JWT | Delete all entries |
-| `DELETE` | `/api/user` | JWT | Delete account + entries |
-| `POST` | `/api/sync` | JWT | Bulk sync |
+| `POST` | `/api/user/delete-request` | JWT | Request account deletion (24 h expiry) |
+| `DELETE` | `/api/user` | JWT | Delete account + entries (`?confirm=true`) |
+| `POST` | `/api/sync` | JWT | Delta sync (entries + `deleted_ids` + `last_sync_at`) |
+
+## Environment Variables
+
+### Backend (`backend/.env`)
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `SUPABASE_URL` | Yes | — | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Yes | — | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | No | — | Required for account deletion |
+| `ALLOWED_ORIGINS` | No | Built-in defaults | Comma-separated CORS origins |
+| `RATE_LIMIT_ENTRIES` | No | `60` | Requests/min for entry endpoints |
+| `RATE_LIMIT_SYNC` | No | `10` | Requests/min for sync endpoint |
+
+### Extension (`.env`)
+| Variable | Required | Description |
+|---|---|---|
+| `WXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `WXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
+| `WXT_PUBLIC_BACKEND_URL` | No | Backend URL (default `http://localhost:8080`) |
 
 ## Deployment
 
