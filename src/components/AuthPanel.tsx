@@ -63,8 +63,14 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       return;
     }
 
+    const backendUrl = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+
     if (mode === 'signup') {
-      const { data, error: err } = await sb.auth.signUp({ email, password });
+      const { data, error: err } = await sb.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${backendUrl}/auth/callback` },
+      });
       setLoading(false);
 
       if (err) {

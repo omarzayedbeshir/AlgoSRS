@@ -23,6 +23,11 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := db.ApplySchema(); err != nil {
+		slog.Error("schema apply failed", "error", err)
+		os.Exit(1)
+	}
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /api/health", handler.Health)
