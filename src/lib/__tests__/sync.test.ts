@@ -27,7 +27,11 @@ const mockStorage = vi.hoisted(() => ({
 
 const mockApi = vi.hoisted(() => ({
   sync: vi.fn<
-    (entries: LeetCodeEntry[], deletedIds: string[], lastSyncAt?: string | null) => Promise<{ entries: LeetCodeEntry[] }>
+    (
+      entries: LeetCodeEntry[],
+      deletedIds: string[],
+      lastSyncAt?: string | null,
+    ) => Promise<{ entries: LeetCodeEntry[] }>
   >(),
 }));
 

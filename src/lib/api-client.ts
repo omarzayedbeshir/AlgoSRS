@@ -46,7 +46,9 @@ async function request(path: string, options: RequestInit = {}, retries = 0): Pr
         body = await res.text();
         const parsed = JSON.parse(body);
         body = parsed.error || body;
-      } catch {/* empty */}
+      } catch {
+        /* empty */
+      }
       throw new ApiError(body || res.statusText, res.status);
     }
 
@@ -70,11 +72,9 @@ export const api = {
 
   deleteAllEntries: () => request('/api/user/entries', { method: 'DELETE' }),
 
-  requestDeleteUser: () =>
-    request('/api/user/delete-request', { method: 'POST' }),
+  requestDeleteUser: () => request('/api/user/delete-request', { method: 'POST' }),
 
-  deleteUser: (confirm: boolean) =>
-    request(`/api/user?confirm=${confirm}`, { method: 'DELETE' }),
+  deleteUser: (confirm: boolean) => request(`/api/user?confirm=${confirm}`, { method: 'DELETE' }),
 
   sync: (entries: LeetCodeEntry[], deletedIds: string[], lastSyncAt?: string | null) =>
     request('/api/sync', {

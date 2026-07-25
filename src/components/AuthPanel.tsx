@@ -415,7 +415,9 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
         )}
         <div style={{ flex: 1 }} />
         <button
-          onClick={() => window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')}
+          onClick={() =>
+            window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')
+          }
           style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
         >
           Report Bug
@@ -445,7 +447,9 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           Sign in
         </span>
         <button
-          onClick={() => window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')}
+          onClick={() =>
+            window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')
+          }
           style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
         >
           Report Bug

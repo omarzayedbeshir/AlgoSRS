@@ -1,4 +1,13 @@
-import { getAll, getDirty, save as localSave, markSynced, getPendingDeletes, clearPendingDeletes, getLastSyncAt, setLastSyncAt } from '../storage';
+import {
+  getAll,
+  getDirty,
+  save as localSave,
+  markSynced,
+  getPendingDeletes,
+  clearPendingDeletes,
+  getLastSyncAt,
+  setLastSyncAt,
+} from '../storage';
 import { api } from './api-client';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAuthState } from './supabase';
