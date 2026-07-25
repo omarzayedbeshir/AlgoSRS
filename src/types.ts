@@ -15,6 +15,7 @@ export interface LeetCodeEntry {
   updatedAt?: string;
   syncStatus?: SyncStatus;
   lastSyncedAt?: string;
+  needsSync?: boolean;
   stability?: number;
   difficultyFsrs?: number;
   dueDate?: string;

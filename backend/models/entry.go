@@ -22,6 +22,7 @@ type Entry struct {
 type SyncRequest struct {
 	Entries    []Entry  `json:"entries"`
 	DeletedIDs []string `json:"deleted_ids"`
+	LastSyncAt *string  `json:"last_sync_at"`
 }
 
 type SyncResponse struct {

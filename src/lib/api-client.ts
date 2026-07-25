@@ -76,10 +76,10 @@ export const api = {
   deleteUser: (confirm: boolean) =>
     request(`/api/user?confirm=${confirm}`, { method: 'DELETE' }),
 
-  sync: (entries: LeetCodeEntry[], deletedIds: string[]) =>
+  sync: (entries: LeetCodeEntry[], deletedIds: string[], lastSyncAt?: string | null) =>
     request('/api/sync', {
       method: 'POST',
-      body: JSON.stringify({ entries, deletedIds }),
+      body: JSON.stringify({ entries, deleted_ids: deletedIds, last_sync_at: lastSyncAt ?? null }),
     }),
 };
 

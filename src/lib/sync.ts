@@ -1,4 +1,4 @@
-import { getAll, save as localSave, markSynced } from '../storage';
+import { getAll, getDirty, save as localSave, markSynced, getPendingDeletes, clearPendingDeletes, getLastSyncAt, setLastSyncAt } from '../storage';
 import { api } from './api-client';
 import type { LeetCodeEntry, Rating } from '../types';
 import { getAuthState } from './supabase';
@@ -7,11 +7,17 @@ import { reviewEntry } from './fsrs';
 let _syncing = false;
 
 export async function syncAll(): Promise<void> {
-  const localEntries = await getAll();
+  const lastSyncAt = await getLastSyncAt();
+  const entries = lastSyncAt ? await getDirty() : await getAll();
+  const deletedIds = await getPendingDeletes();
 
-  const response = await api.sync(localEntries, []);
+  if (entries.length === 0 && deletedIds.length === 0) return;
+
+  const response = await api.sync(entries, deletedIds, lastSyncAt);
   const remoteEntries: LeetCodeEntry[] = response.entries;
+  const now = new Date().toISOString();
 
+  const localEntries = await getAll();
   const merged = new Map<string, LeetCodeEntry>();
   for (const e of localEntries) merged.set(e.url, e);
   for (const e of remoteEntries) {
@@ -22,7 +28,7 @@ export async function syncAll(): Promise<void> {
       if (existing?.fsrsState && existing.fsrsState !== 0 && (!e.fsrsState || e.fsrsState === 0)) {
         continue;
       }
-      merged.set(e.url, { ...e, syncStatus: 'synced', lastSyncedAt: new Date().toISOString() });
+      merged.set(e.url, { ...e, syncStatus: 'synced', lastSyncedAt: now });
     }
   }
 
@@ -36,6 +42,12 @@ export async function syncAll(): Promise<void> {
   }
 
   await markSynced([...merged.values()].map((e) => e.id));
+
+  if (deletedIds.length > 0) {
+    await clearPendingDeletes(deletedIds);
+  }
+
+  await setLastSyncAt(now);
 }
 
 export async function autoSync(): Promise<void> {

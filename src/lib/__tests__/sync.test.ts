@@ -16,13 +16,18 @@ function make(overrides: Partial<LeetCodeEntry> = {}): LeetCodeEntry {
 
 const mockStorage = vi.hoisted(() => ({
   getAll: vi.fn<() => Promise<LeetCodeEntry[]>>(),
+  getDirty: vi.fn<() => Promise<LeetCodeEntry[]>>(),
   save: vi.fn<(entry: LeetCodeEntry) => Promise<void>>(),
   markSynced: vi.fn<(ids: string[]) => Promise<void>>(),
+  getPendingDeletes: vi.fn<() => Promise<string[]>>(),
+  clearPendingDeletes: vi.fn<(ids: string[]) => Promise<void>>(),
+  getLastSyncAt: vi.fn<() => Promise<string | null>>(),
+  setLastSyncAt: vi.fn<(ts: string) => Promise<void>>(),
 }));
 
 const mockApi = vi.hoisted(() => ({
   sync: vi.fn<
-    (entries: LeetCodeEntry[], deletedIds: string[]) => Promise<{ entries: LeetCodeEntry[] }>
+    (entries: LeetCodeEntry[], deletedIds: string[], lastSyncAt?: string | null) => Promise<{ entries: LeetCodeEntry[] }>
   >(),
 }));
 
@@ -37,6 +42,8 @@ vi.mock('../supabase', () => ({ getAuthState: mockAuth.getAuthState }));
 describe('sync', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStorage.getLastSyncAt.mockResolvedValue(null);
+    mockStorage.getPendingDeletes.mockResolvedValue([]);
   });
 
   describe('syncAll', () => {
@@ -51,7 +58,7 @@ describe('sync', () => {
 
       await syncAll();
 
-      expect(mockApi.sync).toHaveBeenCalledWith(local, []);
+      expect(mockApi.sync).toHaveBeenCalledWith(local, [], null);
       expect(mockStorage.save).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Remote Updated', syncStatus: 'synced' }),
       );
@@ -135,6 +142,42 @@ describe('sync', () => {
       expect(repairCall!.fsrsState).toBeGreaterThan(0);
       expect(repairCall!.stability).toBeGreaterThan(0);
     });
+
+    it('sends pending deletes to server and clears them', async () => {
+      const local: LeetCodeEntry[] = [];
+      const pendingDeletes = ['del-1', 'del-2'];
+
+      mockStorage.getAll.mockResolvedValue(local);
+      mockStorage.getPendingDeletes.mockResolvedValue(pendingDeletes);
+      mockApi.sync.mockResolvedValue({ entries: [] });
+
+      await syncAll();
+
+      expect(mockApi.sync).toHaveBeenCalledWith(local, pendingDeletes, null);
+      expect(mockStorage.clearPendingDeletes).toHaveBeenCalledWith(pendingDeletes);
+    });
+
+    it('skips sync when nothing has changed', async () => {
+      mockStorage.getAll.mockResolvedValue([]);
+
+      await syncAll();
+
+      expect(mockApi.sync).not.toHaveBeenCalled();
+    });
+
+    it('uses dirty entries when lastSyncAt is set (delta sync)', async () => {
+      const dirty = [make({ id: '1', needsSync: true })];
+      const remote: LeetCodeEntry[] = [];
+
+      mockStorage.getLastSyncAt.mockResolvedValue('2026-07-20T00:00:00.000Z');
+      mockStorage.getDirty.mockResolvedValue(dirty);
+      mockStorage.getPendingDeletes.mockResolvedValue([]);
+      mockApi.sync.mockResolvedValue({ entries: remote });
+
+      await syncAll();
+
+      expect(mockApi.sync).toHaveBeenCalledWith(dirty, [], '2026-07-20T00:00:00.000Z');
+    });
   });
 
   describe('autoSync', () => {
@@ -146,9 +189,9 @@ describe('sync', () => {
       expect(mockApi.sync).not.toHaveBeenCalled();
     });
 
-    it('runs sync when authenticated', async () => {
+    it('runs sync when authenticated and has entries', async () => {
       mockAuth.getAuthState.mockResolvedValue({ isAuthenticated: true });
-      mockStorage.getAll.mockResolvedValue([]);
+      mockStorage.getAll.mockResolvedValue([make()]);
       mockApi.sync.mockResolvedValue({ entries: [] });
 
       await autoSync();
@@ -158,6 +201,7 @@ describe('sync', () => {
 
     it('handles sync error gracefully', async () => {
       mockAuth.getAuthState.mockResolvedValue({ isAuthenticated: true });
+      mockStorage.getAll.mockResolvedValue([make()]);
       mockApi.sync.mockRejectedValue(new Error('network error'));
 
       await expect(autoSync()).resolves.not.toThrow();

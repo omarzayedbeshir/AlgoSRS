@@ -63,7 +63,8 @@ describe('api-client', () => {
     expect(opts.method).toBe('POST');
     expect(JSON.parse(opts.body)).toEqual({
       entries: expect.arrayContaining([expect.objectContaining({ id: '1' })]),
-      deletedIds: ['deleted-1'],
+      deleted_ids: ['deleted-1'],
+      last_sync_at: null,
     });
     expect(result).toEqual({ entries: [{ id: '1' }] });
   });

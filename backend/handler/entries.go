@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+
 	"algosrs-backend/db"
 	"algosrs-backend/middleware"
 	"algosrs-backend/models"
@@ -370,9 +372,11 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	batch := &pgx.Batch{}
+
 	for i := range req.Entries {
 		sanitizeEntry(&req.Entries[i])
-		_, err := db.Pool.Exec(r.Context(),
+		batch.Queue(
 			`INSERT INTO leetcode_entries (id, user_id, title, url, difficulty, tags, rating, date, updated_at, stability, difficulty_fsrs, due_date, reps, lapses, fsrs_state, last_review_at)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9, $10, $11, $12, $13, $14, $15)
 			 ON CONFLICT (user_id, url) DO UPDATE SET
@@ -391,26 +395,32 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			     updated_at = NOW()`,
 			req.Entries[i].ID, userID, req.Entries[i].Title, req.Entries[i].URL, req.Entries[i].Difficulty, req.Entries[i].Tags, req.Entries[i].Rating, req.Entries[i].Date,
 			req.Entries[i].Stability, req.Entries[i].DifficultyFsrs, req.Entries[i].DueDate, req.Entries[i].Reps, req.Entries[i].Lapses, req.Entries[i].FSRSState, req.Entries[i].LastReviewAt)
-		if err != nil {
-			slog.Error("sync upsert failed", "user_id", userID, "entry_id", req.Entries[i].ID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
-			return
-		}
 	}
 
 	for _, id := range req.DeletedIDs {
-		_, err := db.Pool.Exec(r.Context(),
-			`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
-		if err != nil {
-			slog.Error("sync delete failed", "user_id", userID, "entry_id", id, "error", err)
+		batch.Queue(`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
+	}
+
+	if batch.Len() > 0 {
+		br := db.Pool.SendBatch(r.Context(), batch)
+		if err := br.Close(); err != nil {
+			slog.Error("sync batch failed", "user_id", userID, "error", err)
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 			return
 		}
 	}
 
-	rows, err := db.Pool.Query(r.Context(),
-		`SELECT `+cols+` FROM leetcode_entries WHERE user_id = $1
-		 ORDER BY updated_at DESC`, userID)
+	var query string
+	var queryArgs []any
+	if req.LastSyncAt != nil && *req.LastSyncAt != "" {
+		query = `SELECT ` + cols + ` FROM leetcode_entries WHERE user_id = $1 AND updated_at > $2 ORDER BY updated_at DESC`
+		queryArgs = []any{userID, *req.LastSyncAt}
+	} else {
+		query = `SELECT ` + cols + ` FROM leetcode_entries WHERE user_id = $1 ORDER BY updated_at DESC`
+		queryArgs = []any{userID}
+	}
+
+	rows, err := db.Pool.Query(r.Context(), query, queryArgs...)
 	if err != nil {
 		slog.Error("sync query failed", "user_id", userID, "error", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
