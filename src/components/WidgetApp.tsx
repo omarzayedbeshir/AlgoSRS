@@ -64,6 +64,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
       extractProblemData().then((data) => {
         if (data) {
           loadedUrlRef.current = window.location.href;
+          if (data.url === problemRef.current?.url) return;
           setProblem(data);
           if (!defaultMinimized) setView('save');
         }
@@ -121,6 +122,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
       extractProblemData().then((data) => {
         if (data) {
           loadedUrlRef.current = window.location.href;
+          if (data.url === problemRef.current?.url) return;
           setProblem(data);
           if (!defaultMinimized) setView('save');
         }
