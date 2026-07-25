@@ -45,23 +45,27 @@ export default function PracticeList({
     setEntries(all);
   }
 
-  function formatDueDate(dateStr: string | undefined): string {
+  function formatDueDate(dateStr: string | undefined, today: string): string {
     if (!dateStr) return 'Now';
-    const d = new Date(dateStr);
-    const now = new Date();
-    const diffDays = (d.getTime() - now.getTime()) / 86400000;
-    if (diffDays < 0) {
-      if (diffDays > -1) return 'Today';
-      return `${Math.floor(Math.abs(diffDays))}d`;
+    const dateKey = dateStr.slice(0, 10);
+    if (dateKey < today) {
+      const daysOverdue = Math.floor(
+        (new Date(today).getTime() - new Date(dateKey).getTime()) / 86400000,
+      );
+      if (daysOverdue <= 1) return 'Today';
+      return `${daysOverdue}d ago`;
     }
-    if (diffDays < 1) return 'Today';
-    if (diffDays < 2) return 'Tomorrow';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    if (dateKey === today) return 'Today';
+    const daysAhead = Math.floor(
+      (new Date(dateKey).getTime() - new Date(today).getTime()) / 86400000,
+    );
+    if (daysAhead === 1) return 'Tomorrow';
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  const now = new Date();
-  const dueEntries = entries.filter((e) => !e.dueDate || new Date(e.dueDate) <= now);
-  const upcomingEntries = entries.filter((e) => e.dueDate && new Date(e.dueDate) > now);
+  const today = new Date().toISOString().slice(0, 10);
+  const dueEntries = entries.filter((e) => !e.dueDate || e.dueDate.slice(0, 10) <= today);
+  const upcomingEntries = entries.filter((e) => e.dueDate && e.dueDate.slice(0, 10) > today);
 
   dueEntries.sort((a, b) => {
     const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
@@ -201,7 +205,7 @@ export default function PracticeList({
               textAlign: 'right',
             }}
           >
-            {formatDueDate(entry.dueDate)}
+            {formatDueDate(entry.dueDate, today)}
           </span>
           <button
             onClick={(e) => {

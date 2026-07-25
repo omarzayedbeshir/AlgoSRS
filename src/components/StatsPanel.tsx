@@ -272,8 +272,8 @@ export default function StatsPanel({ onBack }: Props) {
   }
 
   const total = entries.length;
-  const now = new Date();
-  const dueToday = entries.filter((e) => !e.dueDate || new Date(e.dueDate) <= now).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const dueToday = entries.filter((e) => !e.dueDate || e.dueDate.slice(0, 10) <= today).length;
   const avgRating = total > 0 ? entries.reduce((s, e) => s + e.rating, 0) / total : 0;
   const dates = getReviewDates(entries);
   const streak = computeStreak(dates);
