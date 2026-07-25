@@ -1,6 +1,7 @@
 package handler
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -46,128 +47,20 @@ type callbackPageData struct {
 	AnonKey     string
 }
 
+//go:embed callback.html
+var callbackHTMLContent string
+
+var callbackTmpl = template.Must(template.New("callback").Parse(callbackHTMLContent))
+
 func AuthCallback(w http.ResponseWriter, r *http.Request) {
 	data := callbackPageData{
 		SupabaseURL: os.Getenv("SUPABASE_URL"),
 		AnonKey:     os.Getenv("SUPABASE_ANON_KEY"),
 	}
 
-	tmpl := template.Must(template.New("callback").Parse(callbackHTML))
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl.Execute(w, data)
+	callbackTmpl.Execute(w, data)
 }
-
-const callbackHTML = `<!DOCTYPE html>
-<html>
-<head>
-  <title>AlgoSRS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f6f8">
-<div id="container" style="text-align:center;padding:40px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.1);max-width:400px;width:90%">
-  <div id="icon" style="font-size:48px;margin-bottom:16px">✅</div>
-  <h1 id="title" style="font-size:20px;color:#1a1a1a;margin:0 0 8px">Email verified!</h1>
-  <p id="subtitle" style="font-size:14px;color:#666;margin:0;line-height:1.5">You can close this tab and go back to the extension.</p>
-  <div id="reset-form" style="display:none;text-align:left">
-    <p style="font-size:14px;color:#666;margin:0 0 16px;line-height:1.5">Enter your new password below.</p>
-    <div id="message"></div>
-    <form id="form" style="display:flex;flex-direction:column;gap:12px">
-      <input type="password" id="password" placeholder="New password" minlength="6" required
-        style="padding:10px 12px;border-radius:8px;border:1px solid #d0d0d0;font-size:14px;outline:none;box-sizing:border-box;width:100%" />
-      <input type="password" id="confirm" placeholder="Confirm password" minlength="6" required
-        style="padding:10px 12px;border-radius:8px;border:1px solid #d0d0d0;font-size:14px;outline:none;box-sizing:border-box;width:100%" />
-      <button type="submit"
-        style="padding:10px;border-radius:8px;border:none;background:#2563eb;color:#fff;font-size:14px;font-weight:500;cursor:pointer;width:100%">
-        Reset password
-      </button>
-    </form>
-    <div id="reset-success" style="display:none;text-align:center">
-      <div style="font-size:48px;margin-bottom:16px">✅</div>
-      <h1 style="font-size:20px;color:#1a1a1a;margin:0 0 8px">Password updated!</h1>
-      <p style="font-size:14px;color:#666;margin:0;line-height:1.5">Your password has been reset successfully. You can close this tab and sign in to the extension with your new password.</p>
-    </div>
-  </div>
-  <div id="error-view" style="display:none;text-align:center">
-    <div style="font-size:48px;margin-bottom:16px">❌</div>
-    <h1 style="font-size:20px;color:#1a1a1a;margin:0 0 8px">Invalid link</h1>
-    <p id="error-text" style="font-size:14px;color:#666;margin:0;line-height:1.5">This reset link is invalid or expired. Please request a new one from the extension.</p>
-  </div>
-</div>
-<script>
-(function() {
-  var SUPABASE_URL = '{{.SupabaseURL}}';
-  var ANON_KEY = '{{.AnonKey}}';
-
-  var hash = window.location.hash.substring(1);
-  var hashParams = new URLSearchParams(hash);
-  var accessToken = hashParams.get('access_token');
-  var type = hashParams.get('type');
-
-  var icon = document.getElementById('icon');
-  var title = document.getElementById('title');
-  var subtitle = document.getElementById('subtitle');
-  var resetForm = document.getElementById('reset-form');
-  var errorView = document.getElementById('error-view');
-  var errorText = document.getElementById('error-text');
-  var form = document.getElementById('form');
-  var message = document.getElementById('message');
-  var resetSuccess = document.getElementById('reset-success');
-
-  if (type === 'recovery' && accessToken) {
-    icon.textContent = '🔐';
-    title.textContent = 'Set new password';
-    subtitle.style.display = 'none';
-    resetForm.style.display = 'block';
-
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      var password = document.getElementById('password').value;
-      var confirm = document.getElementById('confirm').value;
-
-      if (password !== confirm) {
-        message.innerHTML = '<div style="color:#ef4444;font-size:13px;margin-bottom:8px">Passwords do not match.</div>';
-        return;
-      }
-
-      if (password.length < 6) {
-        message.innerHTML = '<div style="color:#ef4444;font-size:13px;margin-bottom:8px">Password must be at least 6 characters.</div>';
-        return;
-      }
-
-      message.innerHTML = '<div style="color:#666;font-size:13px;margin-bottom:8px">Updating password...</div>';
-
-      try {
-        var res = await fetch(SUPABASE_URL + '/auth/v1/user', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': ANON_KEY,
-            'Authorization': 'Bearer ' + accessToken
-          },
-          body: JSON.stringify({ password: password })
-        });
-
-        if (!res.ok) {
-          var text = await res.text().catch(function() { return ''; });
-          throw new Error('Error ' + res.status + ': ' + text.slice(0, 300));
-        }
-
-        form.style.display = 'none';
-        message.style.display = 'none';
-        resetSuccess.style.display = 'block';
-      } catch (err) {
-        message.innerHTML = '<div style="color:#ef4444;font-size:13px;margin-bottom:8px">' + err.message + '</div>';
-      }
-    });
-  } else if (type && !accessToken) {
-    icon.textContent = '❌';
-    title.textContent = 'Invalid link';
-    errorView.style.display = 'block';
-  }
-})();
-</script>
-</body>
-</html>`
 
 func Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})

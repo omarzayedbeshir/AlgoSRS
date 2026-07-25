@@ -285,29 +285,29 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                 required
                 style={inputStyle}
               />
-        {mode === 'signup' && (
-          <label
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 12,
-              color: colors.textSecondary,
-              cursor: 'pointer',
-              lineHeight: 1.4,
-            }}
-          >
-            <input
-              type="checkbox"
-              checked={marketingConsent}
-              onChange={(e) => setMarketingConsent(e.target.checked)}
-              style={{ accentColor: colors.accent, flexShrink: 0 }}
-            />
-            I'd like to receive product updates and tips via email
-          </label>
-        )}
+              {mode === 'signup' && (
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 12,
+                    color: colors.textSecondary,
+                    cursor: 'pointer',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={marketingConsent}
+                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                    style={{ accentColor: colors.accent, flexShrink: 0 }}
+                  />
+                  I'd like to receive product updates and tips via email
+                </label>
+              )}
 
-        {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
+              {error && <div style={{ fontSize: 12, color: colors.red }}>{error}</div>}
               <button
                 type="submit"
                 disabled={loading}

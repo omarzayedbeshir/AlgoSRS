@@ -17,11 +17,7 @@ const RATING_COLORS: Record<number, string> = {
   4: '#0071e3',
 };
 
-export default function ProfilePanel({
-  onBack,
-  onShowStats,
-  onShowSettings,
-}: Props) {
+export default function ProfilePanel({ onBack, onShowStats, onShowSettings }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {
@@ -104,9 +100,7 @@ export default function ProfilePanel({
             }}
           >
             <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{total}</div>
-            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-              Problems
-            </div>
+            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Problems</div>
           </div>
           <div
             style={{
@@ -116,9 +110,7 @@ export default function ProfilePanel({
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>
-              {avgRatingPct}%
-            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgRatingPct}%</div>
             <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
               Avg Rating
             </div>
@@ -131,12 +123,8 @@ export default function ProfilePanel({
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>
-              {avgStability}
-            </div>
-            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-              Stability
-            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>{avgStability}</div>
+            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Stability</div>
           </div>
           <div
             style={{
@@ -149,9 +137,7 @@ export default function ProfilePanel({
             <div style={{ fontSize: 24, fontWeight: 700, color: colors.text }}>
               {entries.length}
             </div>
-            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-              Reviews
-            </div>
+            <div style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>Reviews</div>
           </div>
         </div>
 

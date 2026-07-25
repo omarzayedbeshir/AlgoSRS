@@ -25,17 +25,23 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
   useEffect(() => {
     const sb = getSupabase();
     if (!sb) return;
-    sb.auth.getUser().then(({ data }) => {
-      const val = data.user?.user_metadata?.marketing_consent;
-      if (typeof val === 'boolean') setMarketingConsent(val);
-    }).catch(() => {});
+    sb.auth
+      .getUser()
+      .then(({ data }) => {
+        const val = data.user?.user_metadata?.marketing_consent;
+        if (typeof val === 'boolean') setMarketingConsent(val);
+      })
+      .catch(() => {});
   }, []);
 
   async function handleToggleMarketing() {
     setMarketingLoading(true);
     setMarketingError(null);
     const sb = getSupabase();
-    if (!sb) { setMarketingLoading(false); return; }
+    if (!sb) {
+      setMarketingLoading(false);
+      return;
+    }
     const next = !marketingConsent;
     try {
       const { error } = await sb.auth.updateUser({ data: { marketing_consent: next } });
@@ -172,7 +178,9 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
               justifyContent: 'space-between',
             }}
           >
-            <span style={{ fontSize: 14, color: colors.text }}>Receive product updates and tips</span>
+            <span style={{ fontSize: 14, color: colors.text }}>
+              Receive product updates and tips
+            </span>
             <div
               onClick={marketingLoading ? undefined : handleToggleMarketing}
               style={{
@@ -203,7 +211,9 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
             </div>
           </div>
           {marketingError && (
-            <div style={{ fontSize: 12, color: colors.red, marginBottom: 12 }}>{marketingError}</div>
+            <div style={{ fontSize: 12, color: colors.red, marginBottom: 12 }}>
+              {marketingError}
+            </div>
           )}
           <div
             style={{
