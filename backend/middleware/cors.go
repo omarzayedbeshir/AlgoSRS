@@ -12,6 +12,8 @@ func allowedOrigins() map[string]bool {
 		return map[string]bool{
 			"chrome-extension://fecmmleidnidbnbddpcmgfdpngedljgk": true,
 			"https://lc-fsrs-production.up.railway.app":           true,
+			"https://leetcode.com":                                true,
+			"https://leetcode.cn":                                 true,
 			"http://localhost:8080":                                true,
 		}
 	}
