@@ -20,6 +20,8 @@ const RATING_COLORS: Record<number, string> = {
   4: '#0071e3',
 };
 
+type DeleteStep = 'none' | 'confirm' | 'final';
+
 export default function ProfilePanel({
   onBack,
   onAuthChange,
@@ -30,6 +32,8 @@ export default function ProfilePanel({
   const [confirmAction, setConfirmAction] = useState<'reset' | 'delete' | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteStep, setDeleteStep] = useState<DeleteStep>('none');
 
   useEffect(() => {
     getAll().then(setEntries);
@@ -53,6 +57,7 @@ export default function ProfilePanel({
 
   async function handleReset() {
     setBusy(true);
+    setError(null);
     try {
       await api.deleteAllEntries();
     } catch (err) {
@@ -66,30 +71,45 @@ export default function ProfilePanel({
     onBack();
   }
 
-  async function handleDeleteAccount() {
+  async function handleDeleteRequest() {
     setBusy(true);
+    setError(null);
     try {
-      await api.deleteUser();
-    } catch {
+      await api.requestDeleteUser();
+      setDeleteStep('final');
+      setConfirmText('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to initiate deletion');
+    } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleDeleteFinal() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api.deleteUser(true);
+      const sb = getSupabase();
+      await clearAll();
+      await sb?.auth.signOut();
+      setDeleteStep('none');
       setConfirmAction(null);
       setConfirmText('');
-      return;
+      setBusy(false);
+      onAuthChange();
+      onBack();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete account');
+      setBusy(false);
     }
-
-    const sb = getSupabase();
-    await clearAll();
-    await sb?.auth.signOut();
-    setConfirmAction(null);
-    setConfirmText('');
-    setBusy(false);
-    onAuthChange();
-    onBack();
   }
 
   function cancelConfirm() {
     setConfirmAction(null);
     setConfirmText('');
+    setDeleteStep('none');
+    setError(null);
   }
 
   return (
@@ -302,8 +322,54 @@ export default function ProfilePanel({
                 >
                   This will permanently delete all your saved problems and review history.
                 </div>
+                <div style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+                  Type <strong style={{ color: colors.text }}>DELETE</strong> to confirm:
+                </div>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  style={{
+                    fontFamily,
+                    fontSize: 14,
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: colors.bg,
+                    color: colors.text,
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {busy && (
+                  <div style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
+                    Working...
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                  <button
+                    onClick={handleReset}
+                    disabled={confirmText !== 'DELETE' || busy}
+                    style={{
+                      ...button('primary'),
+                      flex: 1,
+                      opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
+                    }}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    onClick={cancelConfirm}
+                    disabled={busy}
+                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </>
-            ) : (
+            ) : deleteStep === 'none' ? (
               <>
                 <div style={{ fontSize: 15, fontWeight: 600, color: colors.red, marginBottom: 6 }}>
                   Delete account?
@@ -319,54 +385,98 @@ export default function ProfilePanel({
                   This will permanently delete all your data and your account. This cannot be
                   undone.
                 </div>
+                <div style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+                  Type <strong style={{ color: colors.text }}>DELETE</strong> to confirm:
+                </div>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  style={{
+                    fontFamily,
+                    fontSize: 14,
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: colors.bg,
+                    color: colors.text,
+                    outline: 'none',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                {error && (
+                  <div style={{ fontSize: 12, color: colors.red, marginTop: 6 }}>{error}</div>
+                )}
+                {busy && (
+                  <div style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
+                    Working...
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                  <button
+                    onClick={handleDeleteRequest}
+                    disabled={confirmText !== 'DELETE' || busy}
+                    style={{
+                      ...button('danger'),
+                      flex: 1,
+                      opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
+                    }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={cancelConfirm}
+                    disabled={busy}
+                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: colors.red, marginBottom: 6 }}>
+                  Final confirmation
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                    lineHeight: 1.5,
+                    marginBottom: 10,
+                  }}
+                >
+                  Are you absolutely sure? This action is permanent and cannot be undone. All your
+                  data will be lost.
+                </div>
+                {error && (
+                  <div style={{ fontSize: 12, color: colors.red, marginTop: 6 }}>{error}</div>
+                )}
+                {busy && (
+                  <div style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
+                    Deleting...
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                  <button
+                    onClick={handleDeleteFinal}
+                    disabled={busy}
+                    style={{ ...button('danger'), flex: 1, opacity: busy ? 0.5 : 1 }}
+                  >
+                    Yes, delete everything
+                  </button>
+                  <button
+                    onClick={cancelConfirm}
+                    disabled={busy}
+                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </>
             )}
-            <div style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
-              Type <strong style={{ color: colors.text }}>DELETE</strong> to confirm:
-            </div>
-            <input
-              type="text"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="DELETE"
-              style={{
-                fontFamily,
-                fontSize: 14,
-                padding: '10px 12px',
-                borderRadius: 8,
-                border: 'none',
-                background: colors.bg,
-                color: colors.text,
-                outline: 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-              }}
-            />
-            {busy && (
-              <div style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
-                Working...
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-              <button
-                onClick={confirmAction === 'reset' ? handleReset : handleDeleteAccount}
-                disabled={confirmText !== 'DELETE' || busy}
-                style={{
-                  ...button(confirmAction === 'delete' ? 'danger' : 'primary'),
-                  flex: 1,
-                  opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
-                }}
-              >
-                {confirmAction === 'reset' ? 'Reset' : 'Delete'}
-              </button>
-              <button
-                onClick={cancelConfirm}
-                disabled={busy}
-                style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       )}

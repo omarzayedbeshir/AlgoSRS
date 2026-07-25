@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,7 +18,9 @@ func Auth(next http.Handler) http.Handler {
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			slog.Warn("missing authorization header", "path", r.URL.Path)
-			http.Error(w, `{"error":"missing authorization"}`, http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error":"unauthorized"}`))
 			return
 		}
 
@@ -29,14 +30,18 @@ func Auth(next http.Handler) http.Handler {
 		token, err := jwt.ParseWithClaims(tokenString, claims, keyFunc)
 		if err != nil || !token.Valid {
 			slog.Warn("invalid token", "path", r.URL.Path, "error", err)
-			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error":"unauthorized"}`))
 			return
 		}
 
 		userID, ok := (*claims)["sub"].(string)
 		if !ok || userID == "" {
 			slog.Warn("missing sub claim in token", "path", r.URL.Path)
-			http.Error(w, `{"error":"invalid user"}`, http.StatusUnauthorized)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error":"unauthorized"}`))
 			return
 		}
 
@@ -46,19 +51,11 @@ func Auth(next http.Handler) http.Handler {
 }
 
 func keyFunc(token *jwt.Token) (interface{}, error) {
-	if kid, ok := token.Header["kid"].(string); ok && kid != "" {
-		return getKeyFromJWKS(kid)
+	kid, ok := token.Header["kid"].(string)
+	if !ok || kid == "" {
+		return nil, jwt.ErrSignatureInvalid
 	}
-
-	if _, ok := token.Method.(*jwt.SigningMethodHMAC); ok {
-		secret := os.Getenv("SUPABASE_JWT_SECRET")
-		if secret == "" {
-			return nil, jwt.ErrSignatureInvalid
-		}
-		return []byte(secret), nil
-	}
-
-	return nil, jwt.ErrSignatureInvalid
+	return getKeyFromJWKS(kid)
 }
 
 func GetUserID(r *http.Request) string {

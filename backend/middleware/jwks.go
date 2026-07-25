@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"net/http"
 	"os"
@@ -27,10 +28,24 @@ type jwksResponse struct {
 }
 
 var (
-	jwksCache      []jwkKey
-	jwksCacheMu    sync.RWMutex
-	jwksFetchedAt  time.Time
+	jwksCache     []jwkKey
+	jwksCacheMu   sync.RWMutex
+	jwksFetchedAt time.Time
 )
+
+func InitJWKS() {
+	if _, err := fetchJWKS(); err != nil {
+		slog.Warn("initial JWKS fetch failed, will retry", "error", err)
+	}
+	go func() {
+		for {
+			time.Sleep(5 * time.Minute)
+			if _, err := fetchJWKS(); err != nil {
+				slog.Warn("JWKS refresh failed", "error", err)
+			}
+		}
+	}()
+}
 
 func getKeyFromJWKS(kid string) (interface{}, error) {
 	keys, err := fetchJWKS()
@@ -64,17 +79,29 @@ func fetchJWKS() ([]jwkKey, error) {
 
 	supabaseURL := os.Getenv("SUPABASE_URL")
 	if supabaseURL == "" {
+		if jwksCache != nil {
+			slog.Warn("SUPABASE_URL not set, using stale JWKS cache")
+			return jwksCache, nil
+		}
 		return nil, fmt.Errorf("SUPABASE_URL not set")
 	}
 
 	resp, err := http.Get(supabaseURL + "/auth/v1/.well-known/jwks.json")
 	if err != nil {
+		if jwksCache != nil {
+			slog.Warn("failed to fetch JWKS, using stale cache", "error", err)
+			return jwksCache, nil
+		}
 		return nil, fmt.Errorf("fetch jwks: %w", err)
 	}
 	defer resp.Body.Close()
 
 	var jk jwksResponse
 	if err := json.NewDecoder(resp.Body).Decode(&jk); err != nil {
+		if jwksCache != nil {
+			slog.Warn("failed to decode JWKS, using stale cache", "error", err)
+			return jwksCache, nil
+		}
 		return nil, fmt.Errorf("decode jwks: %w", err)
 	}
 

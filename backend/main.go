@@ -15,6 +15,8 @@ func main() {
 		Level: slog.LevelInfo,
 	})))
 
+	middleware.InitJWKS()
+
 	if err := db.Connect(); err != nil {
 		slog.Error("database connection failed", "error", err)
 		os.Exit(1)
@@ -27,12 +29,16 @@ func main() {
 	mux.HandleFunc("GET /api/health", handler.Health)
 	mux.HandleFunc("GET /auth/callback", handler.AuthCallback)
 
-	mux.Handle("GET /api/entries", middleware.Auth(http.HandlerFunc(handler.ListEntries)))
-	mux.Handle("POST /api/entries", middleware.Auth(http.HandlerFunc(handler.UpsertEntry)))
-	mux.Handle("DELETE /api/entries", middleware.Auth(http.HandlerFunc(handler.DeleteEntry)))
-	mux.Handle("DELETE /api/user/entries", middleware.Auth(http.HandlerFunc(handler.DeleteAllEntries)))
-	mux.Handle("DELETE /api/user", middleware.Auth(http.HandlerFunc(handler.DeleteUser)))
-	mux.Handle("POST /api/sync", middleware.Auth(http.HandlerFunc(handler.SyncEntries)))
+	protected := http.NewServeMux()
+	protected.HandleFunc("GET /api/entries", handler.ListEntries)
+	protected.HandleFunc("POST /api/entries", handler.UpsertEntry)
+	protected.HandleFunc("DELETE /api/entries", handler.DeleteEntry)
+	protected.HandleFunc("DELETE /api/user/entries", handler.DeleteAllEntries)
+	protected.HandleFunc("POST /api/user/delete-request", handler.RequestDeleteUser)
+	protected.HandleFunc("DELETE /api/user", handler.DeleteUser)
+	protected.HandleFunc("POST /api/sync", handler.SyncEntries)
+
+	mux.Handle("/api/", middleware.Auth(middleware.MaxBody(protected)))
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -40,7 +46,7 @@ func main() {
 	}
 
 	slog.Info("listening", "port", port)
-	if err := http.ListenAndServe(":"+port, middleware.CORS(mux)); err != nil {
+	if err := http.ListenAndServe(":"+port, middleware.CORS(middleware.NewRateLimiter(mux))); err != nil {
 		slog.Error("server exited", "error", err)
 		os.Exit(1)
 	}

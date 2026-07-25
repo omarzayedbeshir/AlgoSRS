@@ -20,3 +20,8 @@ CREATE TABLE IF NOT EXISTS leetcode_entries (
 
 CREATE INDEX IF NOT EXISTS idx_entries_user_id ON leetcode_entries(user_id);
 CREATE INDEX IF NOT EXISTS idx_entries_updated_at ON leetcode_entries(updated_at);
+
+CREATE TABLE IF NOT EXISTS user_delete_requests (
+    user_id    UUID         NOT NULL PRIMARY KEY REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);

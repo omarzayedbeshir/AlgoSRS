@@ -86,13 +86,22 @@ describe('api-client', () => {
     expect(opts.method).toBe('DELETE');
   });
 
-  it('deleteUser sends DELETE to user', async () => {
+  it('deleteUser sends DELETE to user with confirm', async () => {
     mockResponse({ status: 'deleted' });
-    await api.deleteUser();
+    await api.deleteUser(true);
 
     const [url, opts] = mockFetch.mock.calls[0];
-    expect(url).toContain('/api/user');
+    expect(url).toContain('/api/user?confirm=true');
     expect(opts.method).toBe('DELETE');
+  });
+
+  it('requestDeleteUser sends POST to delete-request', async () => {
+    mockResponse({ status: 'confirmation_required' });
+    await api.requestDeleteUser();
+
+    const [url, opts] = mockFetch.mock.calls[0];
+    expect(url).toContain('/api/user/delete-request');
+    expect(opts.method).toBe('POST');
   });
 
   it('includes Authorization header when token exists', async () => {

@@ -177,7 +177,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
 		slog.Error("list entries query failed", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 	defer rows.Close()
@@ -187,7 +187,7 @@ func ListEntries(w http.ResponseWriter, r *http.Request) {
 		var e models.Entry
 		if err := scanEntry(&e, rows); err != nil {
 			slog.Error("list entries scan failed", "user_id", userID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 			return
 		}
 		entries = append(entries, e)
@@ -201,9 +201,15 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 
 	var e models.Entry
 	if err := json.NewDecoder(r.Body).Decode(&e); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_json"})
 		return
 	}
+
+	if errs := middleware.ValidateEntry(&e); len(errs) > 0 {
+		middleware.WriteValidationError(w, errs)
+		return
+	}
+
 	sanitizeEntry(&e)
 
 	err := db.Pool.QueryRow(r.Context(),
@@ -230,7 +236,7 @@ func UpsertEntry(w http.ResponseWriter, r *http.Request) {
 			&e.UpdatedAt, &e.Stability, &e.DifficultyFsrs, &e.DueDate, &e.Reps, &e.Lapses, &e.FSRSState, &e.LastReviewAt)
 	if err != nil {
 		slog.Error("upsert entry failed", "user_id", userID, "entry_id", e.ID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 
@@ -241,7 +247,7 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing id"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing_id"})
 		return
 	}
 
@@ -249,21 +255,56 @@ func DeleteEntry(w http.ResponseWriter, r *http.Request) {
 		`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
 	if err != nil {
 		slog.Error("delete entry failed", "user_id", userID, "entry_id", id, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func RequestDeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 
 	_, err := db.Pool.Exec(r.Context(),
+		`INSERT INTO user_delete_requests (user_id, created_at) VALUES ($1, NOW())
+		 ON CONFLICT (user_id) DO UPDATE SET created_at = NOW()`, userID)
+	if err != nil {
+		slog.Error("delete request failed", "user_id", userID, "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "confirmation_required"})
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+
+	if r.URL.Query().Get("confirm") != "true" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "confirmation_required"})
+		return
+	}
+
+	var createdAt time.Time
+	err := db.Pool.QueryRow(r.Context(),
+		`SELECT created_at FROM user_delete_requests WHERE user_id = $1`, userID).Scan(&createdAt)
+	if err != nil {
+		slog.Error("delete request not found", "user_id", userID, "error", err)
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "no_delete_request"})
+		return
+	}
+
+	if time.Since(createdAt) > 24*time.Hour {
+		slog.Warn("delete request expired", "user_id", userID, "created_at", createdAt)
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "delete_request_expired"})
+		return
+	}
+
+	_, err = db.Pool.Exec(r.Context(),
 		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
 	if err != nil {
 		slog.Error("delete user entries failed", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 
@@ -271,7 +312,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	serviceRoleKey := os.Getenv("SUPABASE_SERVICE_ROLE_KEY")
 	if supabaseURL == "" || serviceRoleKey == "" {
 		slog.Error("delete user not configured", "user_id", userID)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server not configured for user deletion"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 
@@ -284,16 +325,19 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	adminRes, err := http.DefaultClient.Do(adminReq)
 	if err != nil {
 		slog.Error("delete user admin request failed", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 	adminRes.Body.Close()
 
 	if adminRes.StatusCode < 200 || adminRes.StatusCode >= 300 {
 		slog.Error("delete user admin rejected", "user_id", userID, "status", adminRes.StatusCode)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to delete auth user"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
+
+	_, _ = db.Pool.Exec(r.Context(),
+		`DELETE FROM user_delete_requests WHERE user_id = $1`, userID)
 
 	writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
 }
@@ -305,7 +349,7 @@ func DeleteAllEntries(w http.ResponseWriter, r *http.Request) {
 		`DELETE FROM leetcode_entries WHERE user_id = $1`, userID)
 	if err != nil {
 		slog.Error("delete all entries failed", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 
@@ -317,7 +361,12 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 
 	var req models.SyncRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_json"})
+		return
+	}
+
+	if errs := middleware.ValidateSyncRequest(&req); len(errs) > 0 {
+		middleware.WriteValidationError(w, errs)
 		return
 	}
 
@@ -344,7 +393,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			req.Entries[i].Stability, req.Entries[i].DifficultyFsrs, req.Entries[i].DueDate, req.Entries[i].Reps, req.Entries[i].Lapses, req.Entries[i].FSRSState, req.Entries[i].LastReviewAt)
 		if err != nil {
 			slog.Error("sync upsert failed", "user_id", userID, "entry_id", req.Entries[i].ID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 			return
 		}
 	}
@@ -354,7 +403,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 			`DELETE FROM leetcode_entries WHERE id = $1 AND user_id = $2`, id, userID)
 		if err != nil {
 			slog.Error("sync delete failed", "user_id", userID, "entry_id", id, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 			return
 		}
 	}
@@ -364,7 +413,7 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY updated_at DESC`, userID)
 	if err != nil {
 		slog.Error("sync query failed", "user_id", userID, "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
 	defer rows.Close()
@@ -374,17 +423,11 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 		var e models.Entry
 		if err := scanEntry(&e, rows); err != nil {
 			slog.Error("sync scan failed", "user_id", userID, "error", err)
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 			return
 		}
 		entries = append(entries, e)
 	}
 
 	writeJSON(w, http.StatusOK, models.SyncResponse{Entries: entries})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
 }
