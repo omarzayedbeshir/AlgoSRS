@@ -2,7 +2,9 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -330,11 +332,19 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
 		return
 	}
-	adminRes.Body.Close()
+	defer adminRes.Body.Close()
+
+	body, _ := io.ReadAll(adminRes.Body)
 
 	if adminRes.StatusCode < 200 || adminRes.StatusCode >= 300 {
-		slog.Error("delete user admin rejected", "user_id", userID, "status", adminRes.StatusCode)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "server_error"})
+		slog.Error("delete user admin rejected",
+			"user_id", userID,
+			"status", adminRes.StatusCode,
+			"body", string(body),
+		)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": fmt.Sprintf("delete_user_failed: supabase_admin_api returned %d", adminRes.StatusCode),
+		})
 		return
 	}
 
