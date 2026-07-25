@@ -2,32 +2,10 @@ import { useState, useEffect } from 'react';
 import { getAll } from '../storage';
 import type { LeetCodeEntry } from '../types';
 import { colors, fontFamily } from '../styles';
+import { getReviewDates, computeStreak } from '../lib/streak';
 
 interface Props {
   onBack: () => void;
-}
-
-function getReviewDates(entries: LeetCodeEntry[]): string[] {
-  const dates = new Set<string>();
-  for (const e of entries) {
-    const d = e.updatedAt || e.date;
-    if (d) dates.add(d.slice(0, 10));
-  }
-  return [...dates].sort();
-}
-
-function computeStreak(dates: string[]): number {
-  if (!dates.length) return 0;
-  const today = new Date();
-  let count = 0;
-  for (let i = 0; ; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    if (dates.includes(key)) count++;
-    else break;
-  }
-  return count;
 }
 
 function getStabilityBuckets(entries: LeetCodeEntry[]): { label: string; value: number }[] {

@@ -5,7 +5,6 @@ import PracticeList from './PracticeList';
 import AuthPanel from './AuthPanel';
 import ProfilePanel from './ProfilePanel';
 import StatsPanel from './StatsPanel';
-import SyncStatus from './SyncStatus';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
 import { colors, fontFamily, button } from '../styles';
@@ -232,6 +231,8 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
   }
 
   return (
+    <>
+    <style>{`@keyframes radiate{0%{box-shadow:0 0 0 0 rgba(52,199,89,0.4)}70%{box-shadow:0 0 0 6px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}`}</style>
     <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647 }}>
       <div
         style={{
@@ -268,7 +269,19 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
             WebkitBackdropFilter: 'blur(20px)',
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: 13, color: colors.textSecondary }}>
+          <span style={{ fontWeight: 600, fontSize: 13, color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {authenticated && (
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: colors.green,
+                  display: 'inline-block',
+                  animation: 'radiate 2s infinite',
+                }}
+              />
+            )}
             AlgoSRS
           </span>
           <div style={{ display: 'flex', gap: 2 }}>
@@ -335,7 +348,6 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
           )}
         </div>
         <div>
-          <SyncStatus isAuthenticated={authenticated} />
           <AuthPanel
             onAuthChange={handleAuthChange}
             onEntriesChanged={() => setSyncKey((k) => k + 1)}
@@ -373,5 +385,6 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
         ⭐
       </div>
     </div>
+    </>
   );
 }
