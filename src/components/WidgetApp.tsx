@@ -409,31 +409,30 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
 
         <div
           onClick={handleBadgeClick}
+          title="Open AlgoSRS"
           style={{
             position: 'absolute',
             bottom: 0,
             right: 0,
             zIndex: 1,
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: colors.accent,
-            color: colors.bg,
+            width: 36,
+            height: 36,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 20,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
             userSelect: 'none',
             transition: T,
             opacity: isMinimized ? 1 : 0,
             transform: isMinimized ? 'scale(1)' : 'scale(0.3)',
             pointerEvents: isMinimized ? 'auto' : 'none',
           }}
-          title="Open AlgoSRS"
         >
-          ⭐
+          <svg viewBox="0 0 33.866666 33.866666" width={36} height={36}>
+            <rect x="0" y="0" width="33.866665" height="33.866665" rx="8.5" fill="#ff6600" />
+            <circle cx="16.933332" cy="10.054165" r="4.2333331" fill="#fff" />
+            <circle cx="8.4666662" cy="22.754168" r="4.2333331" fill="#fff" />
+            <circle cx="25.4" cy="22.754168" r="4.2333331" fill="#fff" />
+            <rect x="17.859829" y="1.2861266" width="2.4478021" height="13.229167" fill="#fff" transform="rotate(30)" rx="0" />
+            <rect x="-11.462175" y="18.21521" width="2.4478021" height="13.229167" fill="#fff" rx="0" transform="matrix(-0.8660254,0.5,0.5,0.8660254,0,0)" />
+          </svg>
         </div>
       </div>
     </>
