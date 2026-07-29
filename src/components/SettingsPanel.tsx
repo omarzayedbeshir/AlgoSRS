@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { clearAll } from '../storage';
+import { clearAll, getDailyLimit, setDailyLimit } from '../storage';
 import { getSupabase } from '../lib/supabase';
 import { api } from '../lib/api-client';
 import { colors, fontFamily, button } from '../styles';
@@ -21,6 +21,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [marketingLoading, setMarketingLoading] = useState(false);
   const [marketingError, setMarketingError] = useState<string | null>(null);
+  const [dailyLimit, setDailyLimitState] = useState(5);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -32,7 +33,14 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
         if (typeof val === 'boolean') setMarketingConsent(val);
       })
       .catch(() => {});
+    getDailyLimit().then((l) => setDailyLimitState(l)).catch(() => {});
   }, []);
+
+  async function handleDailyLimitChange(delta: number) {
+    const next = Math.max(0, Math.min(50, dailyLimit + delta));
+    setDailyLimitState(next);
+    await setDailyLimit(next);
+  }
 
   async function handleToggleMarketing() {
     setMarketingLoading(true);
@@ -215,6 +223,68 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
               {marketingError}
             </div>
           )}
+          <div
+            style={{
+              background: colors.bg,
+              borderRadius: 10,
+              padding: '10px 14px',
+              marginBottom: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <span style={{ fontSize: 14, color: colors.text }}>Daily review limit</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                onClick={() => handleDailyLimitChange(-1)}
+                disabled={dailyLimit === 0}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  border: `1px solid ${colors.separator}`,
+                  background: colors.bg,
+                  color: colors.text,
+                  fontSize: 16,
+                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: dailyLimit === 0 ? 'default' : 'pointer',
+                  opacity: dailyLimit === 0 ? 0.3 : 1,
+                  fontFamily,
+                }}
+              >
+                −
+              </button>
+              <span style={{ fontSize: 15, fontWeight: 600, color: colors.text, minWidth: 28, textAlign: 'center' }}>
+                {dailyLimit === 0 ? '∞' : dailyLimit}
+              </span>
+              <button
+                onClick={() => handleDailyLimitChange(1)}
+                disabled={dailyLimit === 50}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  border: `1px solid ${colors.separator}`,
+                  background: colors.bg,
+                  color: colors.text,
+                  fontSize: 16,
+                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: dailyLimit === 50 ? 'default' : 'pointer',
+                  opacity: dailyLimit === 50 ? 0.3 : 1,
+                  fontFamily,
+                }}
+              >
+                +
+              </button>
+            </div>
+          </div>
           <div
             style={{
               fontSize: 13,

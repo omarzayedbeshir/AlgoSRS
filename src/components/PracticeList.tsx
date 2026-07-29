@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
-import { getAll, remove } from '../storage';
+import { getAll, remove, getDailyLimit, getDailySplit, setDailySplit } from '../storage';
+import type { DailySplit } from '../storage';
 import { api } from '../lib/api-client';
 import { colors, fontFamily, difficultyDot, sectionHeader, emptyState } from '../styles';
 
@@ -25,10 +26,41 @@ export default function PracticeList({
   syncKey,
 }: Props) {
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
+  const [dailyLimit, setDailyLimit] = useState(5);
+  const [delayedIds, setDelayedIds] = useState<string[]>([]);
 
   async function loadEntries() {
-    const all = await getAll();
+    const [all, limit, split] = await Promise.all([getAll(), getDailyLimit(), getDailySplit()]);
     setEntries(all);
+    setDailyLimit(limit);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const due = all.filter((e) => !e.dueDate || e.dueDate.slice(0, 10) <= today);
+
+    if (due.length === 0 || limit === 0) {
+      setDelayedIds([]);
+      if (split) setDailySplit({ date: today, limit, delayedIds: [] });
+      return;
+    }
+
+    due.sort((a, b) => {
+      const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+      const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+      if (da !== db) return da - db;
+      const sa = a.stability ?? 0;
+      const sb = b.stability ?? 0;
+      return sa - sb;
+    });
+
+    if (split && split.date === today && split.limit === limit) {
+      const dueIdSet = new Set(due.map((e) => e.id));
+      const valid = split.delayedIds.filter((id) => dueIdSet.has(id));
+      setDelayedIds(valid);
+    } else {
+      const ids = due.slice(limit).map((e) => e.id);
+      setDelayedIds(ids);
+      await setDailySplit({ date: today, limit, delayedIds: ids });
+    }
   }
 
   useEffect(() => {
@@ -41,8 +73,13 @@ export default function PracticeList({
     if (isAuthenticated) {
       api.deleteEntry(id).catch(() => {});
     }
-    const all = await getAll();
+    const [all, split] = await Promise.all([getAll(), getDailySplit()]);
     setEntries(all);
+    if (split && split.delayedIds.includes(id)) {
+      const next = { ...split, delayedIds: split.delayedIds.filter((did) => did !== id) };
+      setDelayedIds(next.delayedIds);
+      await setDailySplit(next);
+    }
   }
 
   function formatDueDate(dateStr: string | undefined, today: string): string {
@@ -70,7 +107,10 @@ export default function PracticeList({
   dueEntries.sort((a, b) => {
     const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
     const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
-    return da - db;
+    if (da !== db) return da - db;
+    const sa = a.stability ?? 0;
+    const sb = b.stability ?? 0;
+    return sa - sb;
   });
 
   upcomingEntries.sort((a, b) => {
@@ -79,7 +119,9 @@ export default function PracticeList({
     return da - db;
   });
 
-  const totalCount = dueEntries.length + upcomingEntries.length;
+  const delayedSet = new Set(delayedIds);
+  const dueNowEntries = dueEntries.filter((e) => !delayedSet.has(e.id));
+  const delayedEntries = dueEntries.filter((e) => delayedSet.has(e.id));
 
   return (
     <div style={{ fontFamily, paddingBottom: 8 }}>
@@ -93,7 +135,9 @@ export default function PracticeList({
       >
         <span style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>Practice</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, color: colors.textSecondary }}>{totalCount}</span>
+          <span style={{ fontSize: 13, color: colors.textSecondary }}>
+            {dueEntries.length + upcomingEntries.length}
+          </span>
           {showNewButton && (
             <button
               onClick={onSaveNew}
@@ -128,12 +172,23 @@ export default function PracticeList({
         </div>
       ) : (
         <>
-          {dueEntries.length > 0 && (
+          {dueNowEntries.length > 0 && (
             <div style={{ marginBottom: 4 }}>
               <div style={sectionHeader}>Due Now</div>
               <div style={{ background: colors.bg }}>
-                {dueEntries.map((entry, i) =>
-                  renderEntry(entry, i === 0, i === dueEntries.length - 1),
+                {dueNowEntries.map((entry, i) =>
+                  renderEntry(entry, i === 0, i === dueNowEntries.length - 1),
+                )}
+              </div>
+            </div>
+          )}
+
+          {delayedEntries.length > 0 && (
+            <div style={{ marginBottom: 4 }}>
+              <div style={sectionHeader}>Delayed</div>
+              <div style={{ background: colors.bg }}>
+                {delayedEntries.map((entry, i) =>
+                  renderEntry(entry, i === 0, i === delayedEntries.length - 1),
                 )}
               </div>
             </div>

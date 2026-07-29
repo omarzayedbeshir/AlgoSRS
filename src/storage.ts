@@ -3,6 +3,34 @@ import type { LeetCodeEntry } from './types';
 const ENTRIES_KEY = 'algosrs-entries';
 const PENDING_DELETES_KEY = 'algosrs-pending-deletes';
 const LAST_SYNC_KEY = 'algosrs-last-sync';
+const DAILY_LIMIT_KEY = 'algosrs-daily-limit';
+const DAILY_SPLIT_KEY = 'algosrs-daily-split';
+
+const DEFAULT_DAILY_LIMIT = 5;
+
+export interface DailySplit {
+  date: string;
+  limit: number;
+  delayedIds: string[];
+}
+
+export async function getDailyLimit(): Promise<number> {
+  const result = await chrome.storage.local.get<Record<string, number>>(DAILY_LIMIT_KEY);
+  return result[DAILY_LIMIT_KEY] ?? DEFAULT_DAILY_LIMIT;
+}
+
+export async function setDailyLimit(limit: number): Promise<void> {
+  await chrome.storage.local.set({ [DAILY_LIMIT_KEY]: limit });
+}
+
+export async function getDailySplit(): Promise<DailySplit | null> {
+  const result = await chrome.storage.local.get<Record<string, DailySplit>>(DAILY_SPLIT_KEY);
+  return result[DAILY_SPLIT_KEY] ?? null;
+}
+
+export async function setDailySplit(split: DailySplit): Promise<void> {
+  await chrome.storage.local.set({ [DAILY_SPLIT_KEY]: split });
+}
 
 export async function getAll(): Promise<LeetCodeEntry[]> {
   const result = await chrome.storage.local.get<Record<string, LeetCodeEntry[]>>(ENTRIES_KEY);
@@ -71,5 +99,5 @@ export async function setLastSyncAt(ts: string): Promise<void> {
 }
 
 export async function clearAll(): Promise<void> {
-  await chrome.storage.local.remove([ENTRIES_KEY, PENDING_DELETES_KEY, LAST_SYNC_KEY]);
+  await chrome.storage.local.remove([ENTRIES_KEY, PENDING_DELETES_KEY, LAST_SYNC_KEY, DAILY_SPLIT_KEY]);
 }
