@@ -8,7 +8,8 @@ import StatsPanel from './StatsPanel';
 import SettingsPanel from './SettingsPanel';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
-import { colors, fontFamily, button } from '../styles';
+import { fontFamily } from '../styles';
+import { ThemeProvider, useTheme } from './ThemeContext';
 import {
   extractTitle,
   extractUrl,
@@ -21,7 +22,8 @@ type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile' | 'stats' | 
 
 const T = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
-export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boolean }) {
+function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
+  const { colors, isDark } = useTheme();
   const [view, setView] = useState<View>(defaultMinimized ? 'minimized' : 'loading');
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
@@ -283,7 +285,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            background: isMinimized ? 'transparent' : 'rgba(255,255,255,0.85)',
+            background: isMinimized ? 'transparent' : isDark ? 'rgba(28,28,30,0.85)' : 'rgba(255,255,255,0.85)',
             backdropFilter: isMinimized ? 'none' : 'blur(20px)',
             WebkitBackdropFilter: isMinimized ? 'none' : 'blur(20px)',
             boxShadow: isMinimized ? 'none' : '0 8px 40px rgba(0,0,0,0.18)',
@@ -305,7 +307,7 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
               position: 'sticky',
               top: 0,
               zIndex: 1,
-              background: 'rgba(255,255,255,0.8)',
+              background: isDark ? 'rgba(28,28,30,0.8)' : 'rgba(255,255,255,0.8)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
             }}
@@ -436,5 +438,13 @@ export default function WidgetApp({ defaultMinimized }: { defaultMinimized?: boo
         </div>
       </div>
     </>
+  );
+}
+
+export default function WidgetApp(props: { defaultMinimized?: boolean }) {
+  return (
+    <ThemeProvider>
+      <WidgetAppInner {...props} />
+    </ThemeProvider>
   );
 }

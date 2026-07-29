@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getAll } from '../storage';
 import type { LeetCodeEntry } from '../types';
-import { colors, fontFamily } from '../styles';
+import { fontFamily } from '../styles';
+import { useTheme } from './ThemeContext';
 
 interface Props {
   onBack: () => void;
@@ -18,6 +19,7 @@ const RATING_COLORS: Record<number, string> = {
 };
 
 export default function ProfilePanel({ onBack, onShowStats, onShowSettings }: Props) {
+  const { colors } = useTheme();
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
 
   useEffect(() => {

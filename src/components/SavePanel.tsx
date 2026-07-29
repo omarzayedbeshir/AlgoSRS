@@ -3,7 +3,8 @@ import type { ProblemData, Rating, LeetCodeEntry } from '../types';
 import { getAll, save } from '../storage';
 import { api } from '../lib/api-client';
 import { reviewEntry } from '../lib/fsrs';
-import { colors, fontFamily, button } from '../styles';
+import { fontFamily, button } from '../styles';
+import { useTheme } from './ThemeContext';
 
 const RATING_META: Record<Rating, { emoji: string; label: string }> = {
   1: { emoji: '😰', label: 'Very Hard' },
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
+  const { colors } = useTheme();
   const [rating, setRating] = useState<Rating | null>(null);
   const [savedEntry, setSavedEntry] = useState<LeetCodeEntry | null>(null);
   const [saving, setSaving] = useState(false);
@@ -87,7 +89,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
         }}
       >
         <span style={{ fontSize: 13, fontWeight: 600, color: colors.textSecondary }}>Rate</span>
-        <button onClick={onBrowse} style={button('plain')}>
+        <button onClick={onBrowse} style={button('plain', colors)}>
           Practice
         </button>
       </div>

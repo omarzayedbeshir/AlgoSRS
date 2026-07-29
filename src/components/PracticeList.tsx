@@ -3,7 +3,8 @@ import type { LeetCodeEntry, Rating } from '../types';
 import { getAll, remove, getDailyLimit, getDailySplit, setDailySplit } from '../storage';
 import type { DailySplit } from '../storage';
 import { api } from '../lib/api-client';
-import { colors, fontFamily, difficultyDot, sectionHeader, emptyState } from '../styles';
+import { fontFamily, difficultyDot, sectionHeader, emptyState } from '../styles';
+import { useTheme } from './ThemeContext';
 
 const RATING_EMOJI: Record<Rating, string> = {
   1: '😰',
@@ -25,6 +26,7 @@ export default function PracticeList({
   isAuthenticated,
   syncKey,
 }: Props) {
+  const { colors } = useTheme();
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
   const [dailyLimit, setDailyLimit] = useState(5);
   const [delayedIds, setDelayedIds] = useState<string[]>([]);
@@ -164,7 +166,7 @@ export default function PracticeList({
       </div>
 
       {entries.length === 0 ? (
-        <div style={emptyState}>
+          <div style={emptyState(colors)}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>📝</div>
           No saved problems yet.
           <br />
@@ -174,7 +176,7 @@ export default function PracticeList({
         <>
           {dueNowEntries.length > 0 && (
             <div style={{ marginBottom: 4 }}>
-              <div style={sectionHeader}>Due Now</div>
+              <div style={sectionHeader(colors)}>Due Now</div>
               <div style={{ background: colors.bg }}>
                 {dueNowEntries.map((entry, i) =>
                   renderEntry(entry, i === 0, i === dueNowEntries.length - 1),
@@ -185,7 +187,7 @@ export default function PracticeList({
 
           {delayedEntries.length > 0 && (
             <div style={{ marginBottom: 4 }}>
-              <div style={sectionHeader}>Delayed</div>
+              <div style={sectionHeader(colors)}>Delayed</div>
               <div style={{ background: colors.bg }}>
                 {delayedEntries.map((entry, i) =>
                   renderEntry(entry, i === 0, i === delayedEntries.length - 1),
@@ -196,7 +198,7 @@ export default function PracticeList({
 
           {upcomingEntries.length > 0 && (
             <div>
-              <div style={sectionHeader}>Upcoming</div>
+              <div style={sectionHeader(colors)}>Upcoming</div>
               <div style={{ background: colors.bg }}>
                 {upcomingEntries.map((entry, i) =>
                   renderEntry(entry, i === 0, i === upcomingEntries.length - 1),
@@ -237,7 +239,7 @@ export default function PracticeList({
             borderBottom: last ? 'none' : `1px solid ${colors.separator}`,
           }}
         >
-          <span style={difficultyDot(entry.difficulty)} />
+          <span style={difficultyDot(entry.difficulty, colors)} />
           <span
             style={{
               flex: 1,

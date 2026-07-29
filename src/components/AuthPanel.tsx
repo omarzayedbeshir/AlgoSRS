@@ -3,7 +3,8 @@ import { getSupabase, getAuthState } from '../lib/supabase';
 import { getAll, clearAll } from '../storage';
 import { autoSync, syncAll } from '../lib/sync';
 import type { AuthState } from '../types';
-import { colors, fontFamily, button, input as inputStyle } from '../styles';
+import { fontFamily, button, input as inputStyle } from '../styles';
+import { useTheme } from './ThemeContext';
 
 interface Props {
   onAuthChange: () => void;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfile }: Props) {
+  const { colors } = useTheme();
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false });
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
@@ -204,7 +206,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
               onClick={handleReplace}
               disabled={mergeBusy}
               style={{
-                ...button('primary'),
+                ...button('primary', colors),
                 fontSize: 13,
                 padding: '8px 16px',
                 opacity: mergeBusy ? 0.6 : 1,
@@ -225,7 +227,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
               }}
               disabled={mergeBusy}
               style={{
-                ...button('secondary'),
+                ...button('secondary', colors),
                 fontSize: 13,
                 padding: '8px 16px',
                 opacity: mergeBusy ? 0.5 : 1,
@@ -267,7 +269,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                   setResetMode(false);
                   setResetSent(false);
                 }}
-                style={{ ...button('plain'), alignSelf: 'flex-start' }}
+                style={{ ...button('plain', colors), alignSelf: 'flex-start' }}
               >
                 Back to login
               </button>
@@ -283,7 +285,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 required
-                style={inputStyle}
+                style={inputStyle(colors)}
               />
               {mode === 'signup' && (
                 <label
@@ -311,7 +313,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
               <button
                 type="submit"
                 disabled={loading}
-                style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}
+                style={{ ...button('primary', colors), opacity: loading ? 0.6 : 1 }}
               >
                 {loading ? 'Sending...' : 'Send reset link'}
               </button>
@@ -321,7 +323,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                   setResetMode(false);
                   setError('');
                 }}
-                style={{ ...button('plain'), alignSelf: 'center' }}
+                style={{ ...button('plain', colors), alignSelf: 'center' }}
               >
                 Back to login
               </button>
@@ -372,7 +374,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           required
-          style={inputStyle}
+          style={inputStyle(colors)}
         />
         <input
           type="password"
@@ -381,7 +383,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           placeholder="Password"
           required
           minLength={6}
-          style={inputStyle}
+          style={inputStyle(colors)}
         />
 
         {mode === 'signup' && (
@@ -433,7 +435,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
         <button
           type="submit"
           disabled={loading}
-          style={{ ...button('primary'), opacity: loading ? 0.6 : 1 }}
+          style={{ ...button('primary', colors), opacity: loading ? 0.6 : 1 }}
         >
           {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
         </button>
@@ -442,7 +444,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           <button
             type="button"
             onClick={() => setResetMode(true)}
-            style={{ ...button('plain'), alignSelf: 'center', fontSize: 12 }}
+            style={{ ...button('plain', colors), alignSelf: 'center', fontSize: 12 }}
           >
             Forgot password?
           </button>
@@ -466,7 +468,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           <button
             onClick={onShowProfile}
             disabled={loggingOut}
-            style={{ ...button('plain'), opacity: loggingOut ? 0.5 : 1 }}
+            style={{ ...button('plain', colors), opacity: loggingOut ? 0.5 : 1 }}
           >
             Profile
           </button>
@@ -478,7 +480,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
             Signing out…
           </span>
         ) : (
-          <button onClick={handleLogout} style={{ ...button('plain'), color: colors.red }}>
+          <button onClick={handleLogout} style={{ ...button('plain', colors), color: colors.red }}>
             Log out
           </button>
         )}
@@ -487,7 +489,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           onClick={() =>
             window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')
           }
-          style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
+          style={{ ...button('plain', colors), fontSize: 12, color: colors.textTertiary }}
         >
           Report Bug
         </button>
@@ -519,7 +521,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           onClick={() =>
             window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')
           }
-          style={{ ...button('plain'), fontSize: 12, color: colors.textTertiary }}
+          style={{ ...button('plain', colors), fontSize: 12, color: colors.textTertiary }}
         >
           Report Bug
         </button>
@@ -567,7 +569,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
             <div style={{ textAlign: 'center', marginTop: 12 }}>
               <button
                 onClick={closeModal}
-                style={{ ...button('plain'), color: colors.textSecondary, fontSize: 13 }}
+                style={{ ...button('plain', colors), color: colors.textSecondary, fontSize: 13 }}
               >
                 Cancel
               </button>

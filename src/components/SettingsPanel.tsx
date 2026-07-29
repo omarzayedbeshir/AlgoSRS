@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { clearAll, getDailyLimit, setDailyLimit } from '../storage';
 import { getSupabase } from '../lib/supabase';
 import { api } from '../lib/api-client';
-import { colors, fontFamily, button } from '../styles';
+import { fontFamily, button } from '../styles';
+import { useTheme } from './ThemeContext';
 
 interface Props {
   onBack: () => void;
@@ -13,6 +14,7 @@ interface Props {
 type DeleteStep = 'none' | 'confirm' | 'final';
 
 export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }: Props) {
+  const { colors } = useTheme();
   const [confirmAction, setConfirmAction] = useState<'reset' | 'delete' | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -375,7 +377,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
                     onClick={handleReset}
                     disabled={confirmText !== 'DELETE' || busy}
                     style={{
-                      ...button('primary'),
+                      ...button('primary', colors),
                       flex: 1,
                       opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
                     }}
@@ -385,7 +387,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
                   <button
                     onClick={cancelConfirm}
                     disabled={busy}
-                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                    style={{ ...button('secondary', colors), opacity: busy ? 0.5 : 1 }}
                   >
                     Cancel
                   </button>
@@ -441,7 +443,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
                     onClick={handleDeleteRequest}
                     disabled={confirmText !== 'DELETE' || busy}
                     style={{
-                      ...button('danger'),
+                      ...button('danger', colors),
                       flex: 1,
                       opacity: confirmText !== 'DELETE' || busy ? 0.5 : 1,
                     }}
@@ -451,7 +453,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
                   <button
                     onClick={cancelConfirm}
                     disabled={busy}
-                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                    style={{ ...button('secondary', colors), opacity: busy ? 0.5 : 1 }}
                   >
                     Cancel
                   </button>
@@ -485,14 +487,14 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
                   <button
                     onClick={handleDeleteFinal}
                     disabled={busy}
-                    style={{ ...button('danger'), flex: 1, opacity: busy ? 0.5 : 1 }}
+                    style={{ ...button('danger', colors), flex: 1, opacity: busy ? 0.5 : 1 }}
                   >
                     Yes, delete everything
                   </button>
                   <button
                     onClick={cancelConfirm}
                     disabled={busy}
-                    style={{ ...button('secondary'), opacity: busy ? 0.5 : 1 }}
+                    style={{ ...button('secondary', colors), opacity: busy ? 0.5 : 1 }}
                   >
                     Cancel
                   </button>

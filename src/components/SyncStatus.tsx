@@ -1,10 +1,11 @@
-import { colors } from '../styles';
+import { useTheme } from './ThemeContext';
 
 interface Props {
   isAuthenticated: boolean;
 }
 
 export default function SyncStatus({ isAuthenticated }: Props) {
+  const { colors } = useTheme();
   if (!isAuthenticated) return null;
   return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '2px 16px 8px' }}>

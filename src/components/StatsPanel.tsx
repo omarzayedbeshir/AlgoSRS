@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getAll } from '../storage';
 import type { LeetCodeEntry } from '../types';
-import { colors, fontFamily } from '../styles';
+import { fontFamily } from '../styles';
+import { useTheme } from './ThemeContext';
 import { getReviewDates, computeStreak } from '../lib/streak';
 
 interface Props {
@@ -42,6 +43,7 @@ function SimpleBarChart({
   width?: number;
   xLabel?: string;
 }) {
+  const { colors } = useTheme();
   const max = Math.max(...items.map((i) => i.value), 1) * 1.2;
   const chartW = width - 30;
   const n = items.length;
@@ -125,6 +127,7 @@ function HBarChart({
   width?: number;
   maxLabelW?: number;
 }) {
+  const { colors } = useTheme();
   const max = Math.max(...items.map((i) => i.value), 1);
   const barH = 16;
   const gap = 4;
@@ -172,6 +175,7 @@ function HBarChart({
 }
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
+  const { colors } = useTheme();
   return (
     <div
       style={{
@@ -188,6 +192,7 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
 }
 
 function SectionHeader({ title }: { title: string }) {
+  const { colors } = useTheme();
   return (
     <div
       style={{
@@ -205,6 +210,7 @@ function SectionHeader({ title }: { title: string }) {
 }
 
 export default function StatsPanel({ onBack }: Props) {
+  const { colors } = useTheme();
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
   const [chartIdx, setChartIdx] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
