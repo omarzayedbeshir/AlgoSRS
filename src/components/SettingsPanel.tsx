@@ -189,7 +189,7 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
             }}
           >
             <span style={{ fontSize: 14, color: colors.text }}>
-              Receive product updates and tips
+              Receive updates and tips
             </span>
             <div
               onClick={marketingLoading ? undefined : handleToggleMarketing}

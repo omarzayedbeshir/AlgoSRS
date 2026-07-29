@@ -305,7 +305,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                     onChange={(e) => setMarketingConsent(e.target.checked)}
                     style={{ accentColor: colors.accent, flexShrink: 0 }}
                   />
-                  I'd like to receive product updates and tips via email
+                  I'd like to receive updates and tips via email
                 </label>
               )}
 
@@ -425,7 +425,7 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
                 }}
               />
             </div>
-            Receive product updates and tips
+            Receive updates and tips
           </div>
         )}
 
