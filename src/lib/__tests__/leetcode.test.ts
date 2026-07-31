@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { extractTitle, tryExtractDifficulty, extractTags } from '../leetcode';
+import {
+  extractTitle,
+  tryExtractDifficulty,
+  extractTags,
+  problemSlug,
+  sameProblemUrl,
+} from '../leetcode';
 
 describe('leetcode', () => {
   describe('extractTitle', () => {
@@ -158,6 +164,59 @@ describe('leetcode', () => {
       document.body.appendChild(section);
 
       expect(extractTags()).toEqual(['Array']);
+    });
+  });
+
+  describe('sameProblemUrl', () => {
+    it('matches identical URLs', () => {
+      expect(
+        sameProblemUrl(
+          'https://leetcode.com/problems/two-sum/',
+          'https://leetcode.com/problems/two-sum/',
+        ),
+      ).toBe(true);
+    });
+
+    it('ignores trailing slashes', () => {
+      expect(
+        sameProblemUrl(
+          'https://leetcode.com/problems/two-sum',
+          'https://leetcode.com/problems/two-sum/',
+        ),
+      ).toBe(true);
+    });
+
+    it('ignores query params and fragments', () => {
+      expect(
+        sameProblemUrl(
+          'https://leetcode.com/problems/two-sum/',
+          'https://leetcode.com/problems/two-sum/?envId=abc123#description',
+        ),
+      ).toBe(true);
+    });
+
+    it('rejects different problems', () => {
+      expect(
+        sameProblemUrl(
+          'https://leetcode.com/problems/two-sum/',
+          'https://leetcode.com/problems/add-two-numbers/',
+        ),
+      ).toBe(false);
+    });
+
+    it('falls back to exact match for malformed URLs', () => {
+      expect(sameProblemUrl('not-a-url', 'not-a-url')).toBe(true);
+      expect(sameProblemUrl('not-a-url', 'also-not')).toBe(false);
+    });
+  });
+
+  describe('problemSlug', () => {
+    it('extracts the slug', () => {
+      expect(problemSlug('https://leetcode.com/problems/two-sum/?envId=x')).toBe('two-sum');
+    });
+
+    it('returns null for non-problem URLs', () => {
+      expect(problemSlug('https://leetcode.com/problemset/')).toBeNull();
     });
   });
 });

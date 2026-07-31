@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getAll, save, remove, markSynced, clearAll } from '../../storage';
-import type { LeetCodeEntry } from '../../types';
+import {
+  getAll,
+  save,
+  remove,
+  markSynced,
+  clearAll,
+  getReviewSessionState,
+  saveReviewSessionState,
+} from '../../storage';
+import type { LeetCodeEntry, Rating } from '../../types';
 
 function make(overrides: Partial<LeetCodeEntry> = {}): LeetCodeEntry {
   return {
@@ -77,5 +85,48 @@ describe('storage', () => {
     await save(make({ id: '2' }));
     await clearAll();
     expect(await getAll()).toEqual([]);
+  });
+
+  it('saveReviewSessionState stores and getReviewSessionState returns it', async () => {
+    const state = {
+      ids: ['1', '2'],
+      index: 1,
+      results: [{ title: 'Two Sum', rating: 3 as Rating, scheduledDays: 4 }],
+      skipped: 0,
+      finished: false,
+      startedAt: '2026-07-31T10:00:00.000Z',
+    };
+    await saveReviewSessionState(state);
+    expect(await getReviewSessionState()).toEqual(state);
+  });
+
+  it('saveReviewSessionState(null) clears the stored session', async () => {
+    await saveReviewSessionState({
+      ids: ['1'],
+      index: 0,
+      results: [],
+      skipped: 0,
+      finished: false,
+      startedAt: '2026-07-31T10:00:00.000Z',
+    });
+    await saveReviewSessionState(null);
+    expect(await getReviewSessionState()).toBeNull();
+  });
+
+  it('getReviewSessionState returns null when nothing stored', async () => {
+    expect(await getReviewSessionState()).toBeNull();
+  });
+
+  it('clearAll removes the stored session', async () => {
+    await saveReviewSessionState({
+      ids: ['1'],
+      index: 0,
+      results: [],
+      skipped: 0,
+      finished: false,
+      startedAt: '2026-07-31T10:00:00.000Z',
+    });
+    await clearAll();
+    expect(await getReviewSessionState()).toBeNull();
   });
 });

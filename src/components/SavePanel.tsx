@@ -5,13 +5,7 @@ import { api } from '../lib/api-client';
 import { reviewEntry } from '../lib/fsrs';
 import { fontFamily, button } from '../styles';
 import { useTheme } from './ThemeContext';
-
-const RATING_META: Record<Rating, { emoji: string; label: string }> = {
-  1: { emoji: '😰', label: 'Very Hard' },
-  2: { emoji: '😅', label: 'Hard' },
-  3: { emoji: '🙂', label: 'Easy' },
-  4: { emoji: '😎', label: 'Very Easy' },
-};
+import RatingButtons from './RatingButtons';
 
 interface Props {
   problem: ProblemData;
@@ -115,43 +109,7 @@ export default function SavePanel({ problem, onSaved, onBrowse }: Props) {
         How was it for you?
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-        {([1, 2, 3, 4] as Rating[]).map((r) => {
-          const selected = rating === r;
-          return (
-            <button
-              key={r}
-              onClick={() => setRating(r)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 4,
-                padding: '14px 8px',
-                borderRadius: 12,
-                border: 'none',
-                background: selected ? colors.accentLight : colors.bgSecondary,
-                cursor: 'pointer',
-                fontFamily,
-                transition: 'all 0.12s',
-                outline: 'none',
-                opacity: rating !== null && !selected ? 0.5 : 1,
-              }}
-            >
-              <span style={{ fontSize: 28, lineHeight: 1 }}>{RATING_META[r].emoji}</span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: selected ? colors.accent : colors.textSecondary,
-                }}
-              >
-                {RATING_META[r].label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <RatingButtons value={rating} onChange={setRating} />
 
       <button
         onClick={handleSave}

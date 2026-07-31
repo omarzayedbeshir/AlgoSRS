@@ -35,6 +35,18 @@ export function extractUrl(): string | null {
   return match ? match[0] : null;
 }
 
+export function problemSlug(url: string): string | null {
+  const match = url.match(/leetcode\.com\/problems\/([^/?#]+)/);
+  return match ? match[1] : null;
+}
+
+export function sameProblemUrl(a: string, b: string): boolean {
+  const sa = problemSlug(a);
+  const sb = problemSlug(b);
+  if (sa && sb) return sa === sb;
+  return a === b;
+}
+
 export function tryExtractDifficulty(): Difficulty | null {
   const badge = document.querySelector('[data-difficulty]');
   if (badge) {

@@ -6,8 +6,10 @@ import AuthPanel from './AuthPanel';
 import ProfilePanel from './ProfilePanel';
 import StatsPanel from './StatsPanel';
 import SettingsPanel from './SettingsPanel';
+import ReviewSession from './ReviewSession';
 import { getAuthState } from '../lib/supabase';
 import { autoSync } from '../lib/sync';
+import { getReviewSessionState, isActiveReviewSession } from '../storage';
 import { fontFamily } from '../styles';
 import { ThemeProvider, useTheme } from './ThemeContext';
 import {
@@ -18,7 +20,8 @@ import {
   waitForProblemData,
 } from '../lib/leetcode';
 
-type View = 'loading' | 'save' | 'browse' | 'minimized' | 'profile' | 'stats' | 'settings';
+type View =
+  'loading' | 'save' | 'browse' | 'minimized' | 'profile' | 'stats' | 'settings' | 'review';
 
 const T = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -41,7 +44,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
 
   useEffect(() => {
     const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setView('minimized');
+      if (e.key === 'Escape' && viewRef.current !== 'review') setView('minimized');
     };
     window.addEventListener('keydown', escHandler);
     return () => window.removeEventListener('keydown', escHandler);
@@ -68,7 +71,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
           loadedUrlRef.current = window.location.href;
           if (data.url === problemRef.current?.url) return;
           setProblem(data);
-          if (!defaultMinimized) setView('save');
+          if (viewRef.current !== 'review' && !defaultMinimized) setView('save');
         }
       });
     }
@@ -104,17 +107,24 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
         }
       })
       .catch(() => {});
-    if (defaultMinimized) return;
-    waitForProblemData()
-      .then((data) => {
-        if (data) {
-          setProblem(data);
-          setView('save');
-          return;
-        }
-        setView('browse');
-      })
-      .catch(() => setView('browse'));
+    const resumeOrDetect = async () => {
+      const session = await getReviewSessionState();
+      if (isActiveReviewSession(session)) {
+        setView('review');
+        return;
+      }
+      if (defaultMinimized) return;
+      const data = await waitForProblemData();
+      if (data) {
+        setProblem(data);
+        setView('save');
+        return;
+      }
+      setView('browse');
+    };
+    resumeOrDetect().catch(() => {
+      if (!defaultMinimized) setView('browse');
+    });
   }, [defaultMinimized]);
 
   useEffect(() => {
@@ -126,7 +136,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
           loadedUrlRef.current = window.location.href;
           if (data.url === problemRef.current?.url) return;
           setProblem(data);
-          if (!defaultMinimized) setView('save');
+          if (viewRef.current !== 'review' && !defaultMinimized) setView('save');
         }
       });
     }, 2000);
@@ -170,6 +180,40 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
 
   function handleShowSettings() {
     setView('settings');
+  }
+
+  if (view === 'review') {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '16px',
+          right: '16px',
+          zIndex: 2147483647,
+          background: colors.bg,
+          borderRadius: 14,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: 300,
+            height: 480,
+            display: 'flex',
+            flexDirection: 'column',
+            fontFamily,
+            fontSize: 14,
+            color: colors.text,
+          }}
+        >
+          <ReviewSession
+            onExit={() => setView('browse')}
+            onEntriesChanged={() => setSyncKey((k) => k + 1)}
+          />
+        </div>
+      </div>
+    );
   }
 
   if (view === 'profile') {
@@ -402,6 +446,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
                 showNewButton
                 isAuthenticated={authenticated}
                 syncKey={syncKey}
+                onStartReview={() => setView('review')}
               />
             )}
           </div>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { LeetCodeEntry, Rating } from '../types';
-import { getAll, remove, getDailyLimit, getDailySplit, setDailySplit } from '../storage';
-import type { DailySplit } from '../storage';
+import { remove } from '../storage';
+import { getReviewQueue } from '../lib/queue';
 import { api } from '../lib/api-client';
-import { fontFamily, difficultyDot, sectionHeader, emptyState } from '../styles';
+import { fontFamily, difficultyDot, sectionHeader, emptyState, button } from '../styles';
 import { useTheme } from './ThemeContext';
 
 const RATING_EMOJI: Record<Rating, string> = {
@@ -18,6 +18,7 @@ interface Props {
   showNewButton?: boolean;
   isAuthenticated?: boolean;
   syncKey?: number;
+  onStartReview?: () => void;
 }
 
 export default function PracticeList({
@@ -25,44 +26,16 @@ export default function PracticeList({
   showNewButton,
   isAuthenticated,
   syncKey,
+  onStartReview,
 }: Props) {
   const { colors } = useTheme();
   const [entries, setEntries] = useState<LeetCodeEntry[]>([]);
-  const [dailyLimit, setDailyLimit] = useState(5);
   const [delayedIds, setDelayedIds] = useState<string[]>([]);
 
   async function loadEntries() {
-    const [all, limit, split] = await Promise.all([getAll(), getDailyLimit(), getDailySplit()]);
-    setEntries(all);
-    setDailyLimit(limit);
-
-    const today = new Date().toISOString().slice(0, 10);
-    const due = all.filter((e) => !e.dueDate || e.dueDate.slice(0, 10) <= today);
-
-    if (due.length === 0 || limit === 0) {
-      setDelayedIds([]);
-      if (split) setDailySplit({ date: today, limit, delayedIds: [] });
-      return;
-    }
-
-    due.sort((a, b) => {
-      const da = a.dueDate ? new Date(a.dueDate).getTime() : 0;
-      const db = b.dueDate ? new Date(b.dueDate).getTime() : 0;
-      if (da !== db) return da - db;
-      const sa = a.stability ?? 0;
-      const sb = b.stability ?? 0;
-      return sa - sb;
-    });
-
-    if (split && split.date === today && split.limit === limit) {
-      const dueIdSet = new Set(due.map((e) => e.id));
-      const valid = split.delayedIds.filter((id) => dueIdSet.has(id));
-      setDelayedIds(valid);
-    } else {
-      const ids = due.slice(limit).map((e) => e.id);
-      setDelayedIds(ids);
-      await setDailySplit({ date: today, limit, delayedIds: ids });
-    }
+    const queue = await getReviewQueue();
+    setEntries(queue.all);
+    setDelayedIds(queue.delayed.map((e) => e.id));
   }
 
   useEffect(() => {
@@ -75,13 +48,9 @@ export default function PracticeList({
     if (isAuthenticated) {
       api.deleteEntry(id).catch(() => {});
     }
-    const [all, split] = await Promise.all([getAll(), getDailySplit()]);
-    setEntries(all);
-    if (split && split.delayedIds.includes(id)) {
-      const next = { ...split, delayedIds: split.delayedIds.filter((did) => did !== id) };
-      setDelayedIds(next.delayedIds);
-      await setDailySplit(next);
-    }
+    const queue = await getReviewQueue();
+    setEntries(queue.all);
+    setDelayedIds(queue.delayed.map((e) => e.id));
   }
 
   function formatDueDate(dateStr: string | undefined, today: string): string {
@@ -164,6 +133,17 @@ export default function PracticeList({
           )}
         </div>
       </div>
+
+      {dueNowEntries.length > 0 && onStartReview && (
+        <div style={{ padding: '0 16px 8px' }}>
+          <button
+            onClick={onStartReview}
+            style={{ ...button('primary', colors), width: '100%', fontSize: 15, padding: '11px 0' }}
+          >
+            Start Review ({dueNowEntries.length})
+          </button>
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <div style={emptyState(colors)}>
