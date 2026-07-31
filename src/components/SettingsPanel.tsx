@@ -9,11 +9,17 @@ interface Props {
   onBack: () => void;
   onAuthChange: () => void;
   onEntriesChanged?: () => void;
+  isAuthenticated?: boolean;
 }
 
 type DeleteStep = 'none' | 'confirm' | 'final';
 
-export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }: Props) {
+export default function SettingsPanel({
+  onBack,
+  onAuthChange,
+  onEntriesChanged,
+  isAuthenticated,
+}: Props) {
   const { colors } = useTheme();
   const [confirmAction, setConfirmAction] = useState<'reset' | 'delete' | null>(null);
   const [confirmText, setConfirmText] = useState('');
@@ -35,7 +41,9 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
         if (typeof val === 'boolean') setMarketingConsent(val);
       })
       .catch(() => {});
-    getDailyLimit().then((l) => setDailyLimitState(l)).catch(() => {});
+    getDailyLimit()
+      .then((l) => setDailyLimitState(l))
+      .catch(() => {});
   }, []);
 
   async function handleDailyLimitChange(delta: number) {
@@ -67,10 +75,12 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
   async function handleReset() {
     setBusy(true);
     setError(null);
-    try {
-      await api.deleteAllEntries();
-    } catch (err) {
-      console.error('deleteAllEntries:', err);
+    if (isAuthenticated) {
+      try {
+        await api.deleteAllEntries();
+      } catch (err) {
+        console.error('deleteAllEntries:', err);
+      }
     }
     await clearAll();
     setConfirmAction(null);
@@ -177,53 +187,55 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
           >
             Preferences
           </div>
-          <div
-            style={{
-              background: colors.bg,
-              borderRadius: 10,
-              padding: '10px 14px',
-              marginBottom: 20,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <span style={{ fontSize: 14, color: colors.text }}>
-              Receive updates and tips
-            </span>
-            <div
-              onClick={marketingLoading ? undefined : handleToggleMarketing}
-              style={{
-                width: 32,
-                height: 18,
-                borderRadius: 9,
-                background: marketingConsent ? colors.accent : colors.bgTertiary,
-                position: 'relative',
-                flexShrink: 0,
-                cursor: marketingLoading ? 'default' : 'pointer',
-                opacity: marketingLoading ? 0.5 : 1,
-                transition: 'background 0.15s',
-              }}
-            >
+          {isAuthenticated && (
+            <>
               <div
                 style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: '50%',
                   background: colors.bg,
-                  position: 'absolute',
-                  top: 2,
-                  left: marketingConsent ? 16 : 2,
-                  transition: 'left 0.15s',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                  borderRadius: 10,
+                  padding: '10px 14px',
+                  marginBottom: 20,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
-              />
-            </div>
-          </div>
-          {marketingError && (
-            <div style={{ fontSize: 12, color: colors.red, marginBottom: 12 }}>
-              {marketingError}
-            </div>
+              >
+                <span style={{ fontSize: 14, color: colors.text }}>Receive updates and tips</span>
+                <div
+                  onClick={marketingLoading ? undefined : handleToggleMarketing}
+                  style={{
+                    width: 32,
+                    height: 18,
+                    borderRadius: 9,
+                    background: marketingConsent ? colors.accent : colors.bgTertiary,
+                    position: 'relative',
+                    flexShrink: 0,
+                    cursor: marketingLoading ? 'default' : 'pointer',
+                    opacity: marketingLoading ? 0.5 : 1,
+                    transition: 'background 0.15s',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      background: colors.bg,
+                      position: 'absolute',
+                      top: 2,
+                      left: marketingConsent ? 16 : 2,
+                      transition: 'left 0.15s',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  />
+                </div>
+              </div>
+              {marketingError && (
+                <div style={{ fontSize: 12, color: colors.red, marginBottom: 12 }}>
+                  {marketingError}
+                </div>
+              )}
+            </>
           )}
           <div
             style={{
@@ -260,7 +272,15 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
               >
                 −
               </button>
-              <span style={{ fontSize: 15, fontWeight: 600, color: colors.text, minWidth: 28, textAlign: 'center' }}>
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: colors.text,
+                  minWidth: 28,
+                  textAlign: 'center',
+                }}
+              >
                 {dailyLimit === 0 ? '∞' : dailyLimit}
               </span>
               <button
@@ -302,7 +322,15 @@ export default function SettingsPanel({ onBack, onAuthChange, onEntriesChanged }
           <div style={{ background: colors.bg, borderRadius: 10, overflow: 'hidden' }}>
             {[
               { label: 'Reset all data', action: () => setConfirmAction('reset'), danger: false },
-              { label: 'Delete account', action: () => setConfirmAction('delete'), danger: true },
+              ...(isAuthenticated
+                ? [
+                    {
+                      label: 'Delete account',
+                      action: () => setConfirmAction('delete'),
+                      danger: true,
+                    },
+                  ]
+                : []),
             ].map((item, i, arr) => (
               <button
                 key={item.label}

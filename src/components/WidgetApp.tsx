@@ -267,6 +267,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
             onBack={() => setView('profile')}
             onAuthChange={handleAuthChange}
             onEntriesChanged={() => setSyncKey((k) => k + 1)}
+            isAuthenticated={authenticated}
           />
         </div>
       </div>
@@ -285,7 +286,11 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
-            background: isMinimized ? 'transparent' : isDark ? 'rgba(28,28,30,0.85)' : 'rgba(255,255,255,0.85)',
+            background: isMinimized
+              ? 'transparent'
+              : isDark
+                ? 'rgba(28,28,30,0.85)'
+                : 'rgba(255,255,255,0.85)',
             backdropFilter: isMinimized ? 'none' : 'blur(20px)',
             WebkitBackdropFilter: isMinimized ? 'none' : 'blur(20px)',
             boxShadow: isMinimized ? 'none' : '0 8px 40px rgba(0,0,0,0.18)',
@@ -432,8 +437,24 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
             <circle cx="16.933332" cy="10.054165" r="4.2333331" fill="#fff" />
             <circle cx="8.4666662" cy="22.754168" r="4.2333331" fill="#fff" />
             <circle cx="25.4" cy="22.754168" r="4.2333331" fill="#fff" />
-            <rect x="17.859829" y="1.2861266" width="2.4478021" height="13.229167" fill="#fff" transform="rotate(30)" rx="0" />
-            <rect x="-11.462175" y="18.21521" width="2.4478021" height="13.229167" fill="#fff" rx="0" transform="matrix(-0.8660254,0.5,0.5,0.8660254,0,0)" />
+            <rect
+              x="17.859829"
+              y="1.2861266"
+              width="2.4478021"
+              height="13.229167"
+              fill="#fff"
+              transform="rotate(30)"
+              rx="0"
+            />
+            <rect
+              x="-11.462175"
+              y="18.21521"
+              width="2.4478021"
+              height="13.229167"
+              fill="#fff"
+              rx="0"
+              transform="matrix(-0.8660254,0.5,0.5,0.8660254,0,0)"
+            />
           </svg>
         </div>
       </div>

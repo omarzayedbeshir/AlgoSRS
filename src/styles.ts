@@ -57,7 +57,10 @@ export function getColors(isDark: boolean): ThemeColors {
 export const fontFamily =
   '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif';
 
-export function button(variant: 'primary' | 'secondary' | 'danger' | 'plain', c?: ThemeColors): CSSProperties {
+export function button(
+  variant: 'primary' | 'secondary' | 'danger' | 'plain',
+  c?: ThemeColors,
+): CSSProperties {
   const col = c ?? colors;
   const base: CSSProperties = {
     fontFamily,
@@ -123,8 +126,7 @@ export function difficultyDot(difficulty: string, c?: ThemeColors): CSSPropertie
     width: 8,
     height: 8,
     borderRadius: '50%',
-    background:
-      col.difficulty[difficulty as keyof typeof col.difficulty] || col.textTertiary,
+    background: col.difficulty[difficulty as keyof typeof col.difficulty] || col.textTertiary,
     flexShrink: 0,
   };
 }

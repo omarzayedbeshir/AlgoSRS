@@ -166,7 +166,7 @@ export default function PracticeList({
       </div>
 
       {entries.length === 0 ? (
-          <div style={emptyState(colors)}>
+        <div style={emptyState(colors)}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>📝</div>
           No saved problems yet.
           <br />

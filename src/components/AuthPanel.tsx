@@ -468,7 +468,11 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
           <button
             onClick={onShowProfile}
             disabled={loggingOut}
-            style={{ ...button('plain', colors), opacity: loggingOut ? 0.5 : 1 }}
+            style={{
+              ...button('plain', colors),
+              opacity: loggingOut ? 0.5 : 1,
+              color: colors.text,
+            }}
           >
             Profile
           </button>
@@ -502,21 +506,24 @@ export default function AuthPanel({ onAuthChange, onEntriesChanged, onShowProfil
       <div
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          gap: 8,
           padding: '6px 16px 10px',
           borderTop: `1px solid ${colors.separator}`,
-          fontFamily,
-          fontSize: 13,
-          userSelect: 'none',
+          alignItems: 'center',
         }}
       >
-        <span
-          onClick={() => setShowModal(true)}
-          style={{ cursor: 'pointer', fontWeight: 500, color: colors.accent, fontSize: 14 }}
-        >
+        <button onClick={() => setShowModal(true)} style={{ ...button('plain', colors) }}>
           Sign in
-        </span>
+        </button>
+        {onShowProfile && (
+          <button
+            onClick={onShowProfile}
+            style={{ ...button('plain', colors), color: colors.text }}
+          >
+            Profile
+          </button>
+        )}
+        <div style={{ flex: 1 }} />
         <button
           onClick={() =>
             window.open('https://github.com/omarzayedbeshir/AlgoSRS/issues/new', '_blank')

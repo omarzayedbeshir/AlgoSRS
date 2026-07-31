@@ -99,5 +99,10 @@ export async function setLastSyncAt(ts: string): Promise<void> {
 }
 
 export async function clearAll(): Promise<void> {
-  await chrome.storage.local.remove([ENTRIES_KEY, PENDING_DELETES_KEY, LAST_SYNC_KEY, DAILY_SPLIT_KEY]);
+  await chrome.storage.local.remove([
+    ENTRIES_KEY,
+    PENDING_DELETES_KEY,
+    LAST_SYNC_KEY,
+    DAILY_SPLIT_KEY,
+  ]);
 }
