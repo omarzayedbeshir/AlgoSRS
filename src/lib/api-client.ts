@@ -1,7 +1,7 @@
 import { getSupabase } from './supabase';
 import type { LeetCodeEntry } from '../types';
 
-const BACKEND_URL = import.meta.env.WXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_URL = import.meta.env.WXT_PUBLIC_BACKEND_URL;
 
 class ApiError extends Error {
   status: number;

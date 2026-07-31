@@ -15,8 +15,7 @@ export default defineConfig({
     permissions: ['storage', 'activeTab'],
     host_permissions: [
       '*://leetcode.com/*',
-      'https://*.supabase.co/*',
-      'http://localhost:8080/*',
+      'https://pghpcaitgemoryjfxzyy.supabase.co',
       'https://lc-fsrs-production.up.railway.app/*',
     ],
   },

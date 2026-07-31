@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type CSSProperties } from 'react';
 import type { ProblemData } from '../types';
 import SavePanel from './SavePanel';
 import PracticeList from './PracticeList';
@@ -24,6 +24,13 @@ type View =
   'loading' | 'save' | 'browse' | 'minimized' | 'profile' | 'stats' | 'settings' | 'review';
 
 const T = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+
+const FIXED: CSSProperties = {
+  position: 'fixed',
+  bottom: 16,
+  right: 16,
+  zIndex: 2147483647,
+};
 
 function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
   const { colors, isDark } = useTheme();
@@ -186,10 +193,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
     return (
       <div
         style={{
-          position: 'fixed',
-          bottom: '16px',
-          right: '16px',
-          zIndex: 2147483647,
+          ...FIXED,
           background: colors.bg,
           borderRadius: 14,
           boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
@@ -220,10 +224,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
     return (
       <div
         style={{
-          position: 'fixed',
-          bottom: '16px',
-          right: '16px',
-          zIndex: 2147483647,
+          ...FIXED,
           background: colors.bg,
           borderRadius: 14,
           boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
@@ -255,10 +256,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
     return (
       <div
         style={{
-          position: 'fixed',
-          bottom: '16px',
-          right: '16px',
-          zIndex: 2147483647,
+          ...FIXED,
           background: colors.bg,
           borderRadius: 14,
           boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
@@ -286,10 +284,7 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
     return (
       <div
         style={{
-          position: 'fixed',
-          bottom: '16px',
-          right: '16px',
-          zIndex: 2147483647,
+          ...FIXED,
           background: colors.bg,
           borderRadius: 14,
           boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
@@ -321,7 +316,11 @@ function WidgetAppInner({ defaultMinimized }: { defaultMinimized?: boolean }) {
   return (
     <>
       <style>{`@keyframes radiate{0%{box-shadow:0 0 0 0 rgba(52,199,89,0.4)}70%{box-shadow:0 0 0 6px rgba(52,199,89,0)}100%{box-shadow:0 0 0 0 rgba(52,199,89,0)}}`}</style>
-      <div style={{ position: 'fixed', bottom: '16px', right: '16px', zIndex: 2147483647 }}>
+      <div
+        style={{
+          ...FIXED,
+        }}
+      >
         <div
           style={{
             width: isMinimized ? 0 : 300,

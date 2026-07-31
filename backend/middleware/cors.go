@@ -10,7 +10,7 @@ func allowedOrigins() map[string]bool {
 	raw := os.Getenv("ALLOWED_ORIGINS")
 	if raw == "" {
 		return map[string]bool{
-			"chrome-extension://fecmmleidnidbnbddpcmgfdpngedljgk": true,
+			"chrome-extension://plpjamlaminnemffpjingliljjmhahlk": true,
 			"https://lc-fsrs-production.up.railway.app":           true,
 			"https://leetcode.com":                                true,
 			"https://leetcode.cn":                                 true,
