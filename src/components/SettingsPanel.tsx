@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { clearAll, getDailyLimit, setDailyLimit } from '../storage';
+import { clearAll, getAll, getDailyLimit, setDailyLimit } from '../storage';
 import { getSupabase } from '../lib/supabase';
 import { api } from '../lib/api-client';
 import { fontFamily, button } from '../styles';
@@ -50,6 +50,26 @@ export default function SettingsPanel({
     const next = Math.max(0, Math.min(50, dailyLimit + delta));
     setDailyLimitState(next);
     await setDailyLimit(next);
+  }
+
+  async function handleExport() {
+    const [entries, dailyLimit] = await Promise.all([getAll(), getDailyLimit()]);
+    const payload = {
+      app: 'AlgoSRS',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      dailyLimit,
+      entries,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `algosrs-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   async function handleToggleMarketing() {
@@ -306,6 +326,46 @@ export default function SettingsPanel({
                 +
               </button>
             </div>
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: colors.textSecondary,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              marginBottom: 8,
+            }}
+          >
+            Data
+          </div>
+          <div
+            style={{
+              background: colors.bg,
+              borderRadius: 10,
+              overflow: 'hidden',
+              marginBottom: 20,
+            }}
+          >
+            <button
+              onClick={handleExport}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                padding: '12px 14px',
+                border: 'none',
+                background: colors.bg,
+                fontFamily,
+                fontSize: 14,
+                color: colors.text,
+                cursor: 'pointer',
+              }}
+            >
+              Export data
+              <span style={{ color: colors.textTertiary, fontSize: 16 }}>&gt;</span>
+            </button>
           </div>
           <div
             style={{
