@@ -14,9 +14,9 @@ export default defineConfig({
     },
     permissions: ['storage', 'activeTab'],
     host_permissions: [
-      '*://leetcode.com/*',
-      'https://pghpcaitgemoryjfxzyy.supabase.co',
-      'https://lc-fsrs-production.up.railway.app/*',
+      'https://leetcode.com/problems/*',
+      'https://pghpcaitgemoryjfxzyy.supabase.co/auth/v1/*',
+      'https://lc-fsrs-production.up.railway.app/api/*',
     ],
   },
 });

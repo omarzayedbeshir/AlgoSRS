@@ -5,7 +5,7 @@ import WidgetApp from '../components/WidgetApp';
 import { waitForProblemData } from '../lib/leetcode';
 
 export default defineContentScript({
-  matches: ['*://leetcode.com/*'],
+  matches: ['https://leetcode.com/problems/*'],
   main(ctx) {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       if (message.type === 'GET_PROBLEM_DATA') {
@@ -15,8 +15,6 @@ export default defineContentScript({
         return true;
       }
     });
-
-    const isProblemPage = !!window.location.href.match(/leetcode\.com\/problems\/[^/?#]+/);
 
     createShadowRootUi(ctx, {
       name: 'algo-srs',
@@ -32,7 +30,7 @@ export default defineContentScript({
         `;
         container.prepend(style);
         const root = createRoot(container);
-        root.render(<WidgetApp defaultMinimized={!isProblemPage} />);
+        root.render(<WidgetApp defaultMinimized={false} />);
         return root;
       },
       onRemove: (root) => {

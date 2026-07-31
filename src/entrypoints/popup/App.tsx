@@ -59,7 +59,7 @@ export default function App() {
       }}
     >
       <span style={{ fontSize: 40 }}>📝</span>
-      <div style={{ fontSize: 16, fontWeight: 600 }}>Not on LeetCode</div>
+      <div style={{ fontSize: 16, fontWeight: 600 }}>Not on a problem page</div>
       <div style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.5 }}>
         Open a LeetCode problem to start reviewing with spaced repetition.
       </div>
