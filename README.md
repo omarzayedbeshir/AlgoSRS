@@ -175,7 +175,7 @@ npm run zip                   # Packaged .zip for the Chrome Web Store
 [Install AlgoSRS](https://chromewebstore.google.com/detail/algosrs/plpjamlaminnemffpjingliljjmhahlk) — Spaced Repetition for LeetCode.
 
 - **Short description:** Save LeetCode problems with FSRS ratings and review on an optimized schedule. Syncs across devices.
-- **Category:** Productivity / Developer Tools
+- **Category:** Education
 
 ## Privacy Policy
 
