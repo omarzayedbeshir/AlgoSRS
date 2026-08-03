@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -191,7 +192,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Since(createdAt) > 24*time.Hour {
+	if time.Since(createdAt) > deleteConfirmationTTL() {
 		slog.Warn("delete request expired", "user_id", userID, "created_at", createdAt)
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "delete_request_expired"})
 		return
@@ -343,4 +344,19 @@ func SyncEntries(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, models.SyncResponse{Entries: entries})
+}
+
+const defaultDeleteTTL = 24 * time.Hour
+
+func deleteConfirmationTTL() time.Duration {
+	v := os.Getenv("DELETE_CONFIRMATION_TTL_HOURS")
+	if v == "" {
+		return defaultDeleteTTL
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		slog.Warn("invalid DELETE_CONFIRMATION_TTL_HOURS, using default", "value", v)
+		return defaultDeleteTTL
+	}
+	return time.Duration(n) * time.Hour
 }
