@@ -42,7 +42,7 @@ func main() {
 	protected.HandleFunc("DELETE /api/user", handler.DeleteUser)
 	protected.HandleFunc("POST /api/sync", handler.SyncEntries)
 
-	mux.Handle("/api/", middleware.Auth(middleware.MaxBody(protected)))
+	mux.Handle("/api/", middleware.Auth(middleware.NewRateLimiter(middleware.MaxBody(protected))))
 
 	port := os.Getenv("PORT")
 	if port == "" {

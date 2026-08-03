@@ -18,7 +18,7 @@ type bucket struct {
 type RateLimiter struct {
 	mu      sync.Mutex
 	buckets map[string]*bucket
-	limit   int
+	cfg     rateLimitConfig
 	window  time.Duration
 	next    http.Handler
 }
@@ -49,6 +49,7 @@ func loadRateLimitConfig() rateLimitConfig {
 func NewRateLimiter(next http.Handler) *RateLimiter {
 	rl := &RateLimiter{
 		buckets: make(map[string]*bucket),
+		cfg:     loadRateLimitConfig(),
 		window:  time.Minute,
 		next:    next,
 	}
@@ -57,15 +58,11 @@ func NewRateLimiter(next http.Handler) *RateLimiter {
 }
 
 func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	limit := rl.limit
-	cfg := loadRateLimitConfig()
+	var limit int
 	if strings.HasPrefix(r.URL.Path, "/api/sync") {
-		limit = cfg.sync
-	} else if strings.HasPrefix(r.URL.Path, "/api/") {
-		limit = cfg.entries
+		limit = rl.cfg.sync
 	} else {
-		rl.next.ServeHTTP(w, r)
-		return
+		limit = rl.cfg.entries
 	}
 
 	userID := GetUserID(r)
@@ -87,7 +84,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if b.count >= limit {
 		rl.mu.Unlock()
 		wait := time.Until(b.resetAt)
-		w.Header().Set("Retry-After", strconv.Itoa(int(wait.Seconds())))
+		w.Header().Set("Retry-After", strconv.Itoa(int((wait+time.Second-1)/time.Second)))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusTooManyRequests)
 		w.Write([]byte(`{"error":"rate_limited"}`))
